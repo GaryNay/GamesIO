@@ -1,0 +1,28 @@
+<html>
+    <body>
+        <canvas id="rendererCanvas" width="1000" height="400" ></canvas>
+        <script src="./Engine_nomod.js"></script>
+        <script >
+            var canvas = document.getElementById('rendererCanvas');
+            var ctx = canvas.getContext('2d');
+
+            var tree = new QueryTree();
+
+            var movable = new MovableFeature(null, 100, 75, 16, 16);
+
+            var features = [ movable ];
+            for (let i = 0; i < 10; i++) {
+                features.push(new BasicFeature(Math.random() * 800 + 30, Math.random() * 300 + 30, 10, 10));
+            }
+            for (let i = 0; i < features.length; i++) {
+                features[i].index = i;
+                tree.insert(features[i]);
+            }
+
+            var clicker = new FeatureClicker(canvas, features, tree);
+
+            tree.renderVisually(canvas);
+            
+        </script>
+    </body>
+</html>
