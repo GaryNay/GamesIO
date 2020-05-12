@@ -1,0 +1,21 @@
+*.js.map
+*.js
+*.db
+
+# Visual Studio Code Configuration Files
+.vscode/
+.vs/
+node_modules/
+*.dll
+
+Tools/
+packages/
+
+Plugin/bin/
+Plugin/obj/
+
+*.exe
+
+*.pfx
+
+*.ppk
