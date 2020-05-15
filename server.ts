@@ -12,7 +12,7 @@ import fileSystem = require('fs');
 import { ServerGames } from './ServerGames';
 import { User } from './ServerGames';
 import { ServerMobaIO_Game } from './mobaIO_server';
-import { MobaIO_Base } from './mobaIO_base_module';
+// import { MobaIO_Base } from './mobaIO_base_module';
 
 app.get('/sockets/', (req, res) => {
     res.sendFile('/node_modules/socket.io-client/dist/socket.io.js', { root: __dirname });
@@ -38,15 +38,15 @@ app.get('/mobaClient/', (req, res) => {
 app.get('/mobaJson/', (req, res) => {
     res.json(JSON.parse(fileSystem.readFileSync(ServerMobaIO_Game.LocalGameDataPath, 'utf8')));
 });
-app.get('/TRPGJson/', (req, res) => {
-    if (mobaGame) {
-        let exported = mobaGame.export();
-        res.json(exported);
-    }
-    else {
-        res.status(500).send('Game not running!');
-    }
-});
+// app.get('/TRPGJson/', (req, res) => {
+//     if (mobaGame) {
+//         let exported = mobaGame.export();
+//         res.json(exported);
+//     }
+//     else {
+//         res.status(500).send('Game not running!');
+//     }
+// });
 
 app.use('/images', express.static('images'));
 
