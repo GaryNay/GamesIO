@@ -1,0 +1,28 @@
+{
+  "name": "gamesio",
+  "version": "1.0.0",
+  "description": "Game server for families and friends!",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
+    "node.js": "^0.0.1-security",
+    "socket.io": "^2.3.0",
+    "socketio": "^1.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GaryNay/GamesIO.git"
+  },
+  "author": "Gary Heath Nay",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GaryNay/GamesIO/issues"
+  },
+  "homepage": "https://github.com/GaryNay/GamesIO#readme"
+}
