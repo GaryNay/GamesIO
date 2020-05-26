@@ -1,28 +1,35 @@
 
-import socketsImport = require('socket.io');
+// import socketsImport = require('socket.io');
 import { ChatHostServer } from '../ChatHost/ChatHost_Server';
 import fileSystem = require('fs');
 
+export interface Socket extends SocketIO.Socket {
+    userId: number;
+    messageCount?: number;
+    open: ()=> void
+}
+
+export interface IUser {
+    username: string;
+    password: string;
+    color: string;
+    userId: number;
+    admin?: boolean;
+}
+export interface User {
+    username: string;
+    password: string;
+    theSocket?: Socket;
+    color?: string;
+    userId: number;
+    active: boolean;
+    guest: boolean;
+    admin?: boolean;
+    inGame?: boolean;
+    inGameType?: string;
+}
+
 export module ServerGames {
-    export interface IUser {
-        username: string;
-        password: string;
-        color: string;
-        userId: number;
-        admin?: boolean;
-    }
-    export interface User {
-        username: string;
-        password: string;
-        theSocket?: Socket;
-        color?: string;
-        userId: number;
-        active: boolean;
-        guest: boolean;
-        admin?: boolean;
-        inGame?: boolean;
-        inGameType?: string;
-    }
 
     export class Admin implements User {
         username: string = 'admin';
@@ -37,12 +44,6 @@ export module ServerGames {
         inGameType?: string = '';
         constructor() {
         }
-    }
-
-    export interface Socket extends SocketIO.Socket {
-        userId: number;
-        messageCount?: number;
-        open: ()=> void
     }
 
     export interface ServerGameParameters {
@@ -70,7 +71,7 @@ export module ServerGames {
         userId: number;
         userName: string;
         logins: number;
-        user?: ServerGames.User,
+        user?: User,
         currentUserIdIndex?: number
     }
 
@@ -143,7 +144,7 @@ export module ServerGames {
                 guest: false,
                 active: false
             }
-        ] as ServerGames.User[]) {
+        ] as User[]) {
 
 
             this.chatServer = new ChatHostServer.ChatHost(this.masterUserList);
@@ -162,7 +163,7 @@ export module ServerGames {
             });
 
             if (fileSystem.existsSync('./UserServerData.json')) {
-                let userList: ServerGames.User[] = JSON.parse(fileSystem.readFileSync('./UserServerData.json', 'utf8'));
+                let userList: User[] = JSON.parse(fileSystem.readFileSync('./UserServerData.json', 'utf8'));
                 for (let eachUser of userList) {
                     this.masterUserList[ eachUser.userId ] = {
                         userId: eachUser.userId,
@@ -312,23 +313,3 @@ export module ServerGames {
 
     }
 }
-var document;
-if (document) {
-    var require;
-    if (!require) {
-        let requires = {} as any;
-        (<any>window).require = (filePath: string) => {
-            return requires[filePath] || {};
-        };
-        (<any>window).setRequire = (filePath: string, requiredObject: any) => {
-            requires[filePath] = requiredObject || {};
-        };
-    }
-    if ((<any>window).setRequire) {
-        (<any>window).setRequire('./ServerGames', { ServerGames: ServerGames } );
-        (<any>window).setRequire('./ServerGames.js', { ServerGames: ServerGames } );
-        (<any>window).setRequire('../ServerGames/ServerGames', { ServerGames: ServerGames } );
-        (<any>window).setRequire('../ServerGames/ServerGames.js', { ServerGames: ServerGames } );
-    }
-}
-

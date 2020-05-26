@@ -7,7 +7,7 @@ export module ClientProviders {
     export class InputOutputDiv {
         isFocused = false;
         inputCallback: (input: string) => any;
-        triggerElement: HTMLElement;
+        triggerElement: HTMLElement | HTMLDocument;
 
         constructor(
             private outputDiv: IOutputDiv,
@@ -46,9 +46,9 @@ export module ClientProviders {
             this.outputDiv.style.display = "none";
         }
 
-        onInput(triggerElement: HTMLElement, inputCallback: (input: string) => any) {
+        onInput(triggerElement: HTMLElement | HTMLDocument, inputCallback: (input: string) => any) {
             this.triggerElement = triggerElement;
-            this.triggerElement.addEventListener('keyup', (e: { code: string }) => {
+            this.triggerElement.addEventListener('keyup', (e: { code: string } & Event) => {
                 // Check if enter is pressed, refresh ioDiv when that happens
                 if (e.code === 'Enter') {
                     if (!(this.outputDiv.showingDiv >= 0)) {
@@ -581,22 +581,22 @@ export module ClientProviders {
     }
 }
 
-var document;
-if (document) {
-    var require: any;
-    if (!require) {
-        var requires: any = { };
-        (<any>window).require = (filePath: string) => {
-            return requires[filePath] || {};
-        };
-        (<any>window).setRequire = (filePath: string, requiredObject: {}) => {
-            requires[filePath] = requiredObject || {};
-        };
-    }
-    if ((<any>window).setRequire) {
-        (<any>window).setRequire('./ClientProviders', { ClientProviders: ClientProviders });
-        (<any>window).setRequire('./ClientProviders.js', { ClientProviders: ClientProviders });
-        (<any>window).setRequire('../ClientProviders/ClientProviders', { ClientProviders: ClientProviders });
-        (<any>window).setRequire('../ClientProviders/ClientProviders.js', { ClientProviders: ClientProviders });
-    }
-}
+// var document;
+// if (document) {
+//     var require: any;
+//     if (!require) {
+//         var requires: any = { };
+//         (<any>window).require = (filePath: string) => {
+//             return requires[filePath] || {};
+//         };
+//         (<any>window).setRequire = (filePath: string, requiredObject: {}) => {
+//             requires[filePath] = requiredObject || {};
+//         };
+//     }
+//     if ((<any>window).setRequire) {
+//         (<any>window).setRequire('./ClientProviders', { ClientProviders: ClientProviders });
+//         (<any>window).setRequire('./ClientProviders.js', { ClientProviders: ClientProviders });
+//         (<any>window).setRequire('../ClientProviders/ClientProviders', { ClientProviders: ClientProviders });
+//         (<any>window).setRequire('../ClientProviders/ClientProviders.js', { ClientProviders: ClientProviders });
+//     }
+// }

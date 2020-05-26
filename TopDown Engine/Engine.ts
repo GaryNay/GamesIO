@@ -884,22 +884,22 @@ export module TopDownEngine {
 
 } 
 
-var document: any;
-if (document) {
-    var require: any;
-    if (!require) {
-        var requires: any = { };
-        (<any>window).require = (filePath: string) => {
-            return requires[filePath] || {};
-        };
-        (<any>window).setRequire = (filePath: string, requiredObject: {}) => {
-            requires[filePath] = requiredObject || {};
-        };
-    }
-    if ((<any>window).setRequire) {
-        (<any>window).setRequire('./Engine', { TopDownEngine: TopDownEngine });
-        (<any>window).setRequire('./Engine.js', { TopDownEngine: TopDownEngine });
-        (<any>window).setRequire('../TopDown Engine/Engine', { TopDownEngine: TopDownEngine });
-        (<any>window).setRequire('../TopDown Engine/Engine.js', { TopDownEngine: TopDownEngine });
-    }
-}
+// var document: any;
+// if (document) {
+//     var require: any;
+//     if (!require) {
+//         var requires: any = { };
+//         (<any>window).require = (filePath: string) => {
+//             return requires[filePath] || {};
+//         };
+//         (<any>window).setRequire = (filePath: string, requiredObject: {}) => {
+//             requires[filePath] = requiredObject || {};
+//         };
+//     }
+//     if ((<any>window).setRequire) {
+//         (<any>window).setRequire('./Engine', { TopDownEngine: TopDownEngine });
+//         (<any>window).setRequire('./Engine.js', { TopDownEngine: TopDownEngine });
+//         (<any>window).setRequire('../TopDown Engine/Engine', { TopDownEngine: TopDownEngine });
+//         (<any>window).setRequire('../TopDown Engine/Engine.js', { TopDownEngine: TopDownEngine });
+//     }
+// }

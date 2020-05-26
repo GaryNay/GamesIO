@@ -57,22 +57,22 @@ export module ChatHostClient {
     }
 }
 
-var document;
-if (document) {
-    var require;
-    if (!require) {
-        let requires: any = {};
-        (<any>window).require = (filePath: string) => {
-            return requires[filePath] || {};
-        };
-        (<any>window).setRequire = (filePath: string, requiredObject: any) => {
-            requires[filePath] = requiredObject || {};
-        };
-    }
-    if ((<any>window).setRequire) {
-        (<any>window).setRequire('./ChatHost_Client', { ChatHostClient: ChatHostClient } );
-        (<any>window).setRequire('./ChatHost_Client.js', { ChatHostClient: ChatHostClient } );
-        (<any>window).setRequire('../ChatHost/ChatHost_Client', { ChatHostClient: ChatHostClient } );
-        (<any>window).setRequire('../ChatHost/ChatHost_Client.js', { ChatHostClient: ChatHostClient } );
-    }
-}
+// var document;
+// if (document) {
+//     var require;
+//     if (!require) {
+//         let requires: any = {};
+//         (<any>window).require = (filePath: string) => {
+//             return requires[filePath] || {};
+//         };
+//         (<any>window).setRequire = (filePath: string, requiredObject: any) => {
+//             requires[filePath] = requiredObject || {};
+//         };
+//     }
+//     if ((<any>window).setRequire) {
+//         (<any>window).setRequire('./ChatHost_Client', { ChatHostClient: ChatHostClient } );
+//         (<any>window).setRequire('./ChatHost_Client.js', { ChatHostClient: ChatHostClient } );
+//         (<any>window).setRequire('../ChatHost/ChatHost_Client', { ChatHostClient: ChatHostClient } );
+//         (<any>window).setRequire('../ChatHost/ChatHost_Client.js', { ChatHostClient: ChatHostClient } );
+//     }
+// }

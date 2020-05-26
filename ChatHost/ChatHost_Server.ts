@@ -1,6 +1,5 @@
-import { ServerGames } from '../ServerGames/ServerGames';
+import { User } from '../ServerGames/ServerGames';
 import fileSystem = require('fs');
-import { json } from 'express';
 
 export interface ClientChatPackage {
     userId?: number;
@@ -40,7 +39,7 @@ export module ChatHostServer {
 
         currentUserIds: number[];
 
-        constructor (public masterUserList: ServerGames.User[]) {
+        constructor (public masterUserList: User[]) {
             this.currentUserIds = [];
         }
 
@@ -87,7 +86,7 @@ export module ChatHostServer {
             console.log(`ChatHost: ${ this.masterUserList[ toBroadcast.userId - 1 ].username } says "${ toBroadcast.text }" to ${ broadcastAudit } users`);
         }
 
-        join(user: ServerGames.User): boolean {
+        join(user: User): boolean {
             if (!this.userData[ user.userId ]) {
                 // New userdata, subscribe to the lobby
                 this.userData[ user.userId ] = { active: true, userId: user.userId, subscriptions: [], chatHistory: [], socket: user.theSocket };
@@ -115,7 +114,7 @@ export module ChatHostServer {
             }
         }
         
-        drop(user: ServerGames.User): boolean {
+        drop(user: User): boolean {
             this.userData[ user.userId ].active = false;
             this.userData[ user.userId ].socket = null;
             for (let si=0; si< this.userData[ user.userId ].subscriptions.length; si++) {
@@ -126,7 +125,7 @@ export module ChatHostServer {
             return true;
         }
 
-        resume(user: ServerGames.User, channelName?: string): boolean {
+        resume(user: User, channelName?: string): boolean {
             if (!channelName) {
                 let userData = this.userData[ user.userId ];
                 for (let si=0; si< userData.subscriptions.length; si++) {
@@ -141,7 +140,7 @@ export module ChatHostServer {
             return true;
         }
 
-        subscribe(user: ServerGames.User, channelName: string = 'lobby'): boolean {
+        subscribe(user: User, channelName: string = 'lobby'): boolean {
 
             for (let si=0; si < this.userData[ user.userId ].subscriptions.length; si++) {
                 if (this.userData[ user.userId ].subscriptions[si] == channelName) {
@@ -157,7 +156,7 @@ export module ChatHostServer {
             return true;
         }
 
-        unsubscribe(user: ServerGames.User, channelName?: string): boolean {            
+        unsubscribe(user: User, channelName?: string): boolean {            
             if (!channelName) {
                 for (let eachSub of this.userData[ user.userId ].subscriptions) {
                     this.channels[eachSub].currentUserIds.filter((eachId) => { return eachId !== user.userId });

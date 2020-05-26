@@ -1,4 +1,4 @@
-import { ServerGames } from '../ServerGames/ServerGames';
+import { Socket, User } from '../ServerGames/ServerGames';
 import { ClientProviders } from '../ClientProviders/ClientProviders';
 export module LoginProviders {
 
@@ -10,7 +10,7 @@ export module LoginProviders {
             usernameInput: HTMLInputElement,
             passwordInput: HTMLInputElement,
             loginButton: HTMLButtonElement,
-            public loginSocket: ServerGames.Socket,
+            public loginSocket: Socket,
             public behaviors?: { actionHtmlElement: HTMLElement, attributeNames?: { ready?: string, busy?: string, loggedIn?: string, error?: string, connected?: string } },
             private xhrProvider: ClientProviders.XhrProvider = new ClientProviders.XhrProvider()
         ) {
@@ -76,7 +76,7 @@ export module LoginProviders {
             this.loginCallback(data, gameData);
         }
     
-        onLogin(callbackFn: (user: ServerGames.User, gameInfo: any) => void) {
+        onLogin(callbackFn: (user: User, gameInfo: any) => void) {
             this.loginCallback = callbackFn;
         }
         
@@ -86,22 +86,22 @@ export module LoginProviders {
     }
 
 }
-var document;
-if (document) {
-    var require;
-    if (!require) {
-        let requires: any = {};
-        (<any>window).require = (filePath: string) => {
-            return requires[filePath] || {};
-        };
-        (<any>window).setRequire = (filePath: string, requiredObject: any) => {
-            requires[filePath] = requiredObject || {};
-        };
-    }
-    if ((<any>window).setRequire) {
-        (<any>window).setRequire('./LoginProvider', { LoginProviders: LoginProviders } );
-        (<any>window).setRequire('./LoginProvider.js', { LoginProviders: LoginProviders } );
-        (<any>window).setRequire('../LoginProvider/LoginProvider', { LoginProviders: LoginProviders } );
-        (<any>window).setRequire('../LoginProvider/LoginProvider.js', { LoginProviders: LoginProviders } );
-    }
-}
+// var document;
+// if (document) {
+//     var require;
+//     if (!require) {
+//         let requires: any = {};
+//         (<any>window).require = (filePath: string) => {
+//             return requires[filePath] || {};
+//         };
+//         (<any>window).setRequire = (filePath: string, requiredObject: any) => {
+//             requires[filePath] = requiredObject || {};
+//         };
+//     }
+//     if ((<any>window).setRequire) {
+//         (<any>window).setRequire('./LoginProvider', { LoginProviders: LoginProviders } );
+//         (<any>window).setRequire('./LoginProvider.js', { LoginProviders: LoginProviders } );
+//         (<any>window).setRequire('../LoginProvider/LoginProvider', { LoginProviders: LoginProviders } );
+//         (<any>window).setRequire('../LoginProvider/LoginProvider.js', { LoginProviders: LoginProviders } );
+//     }
+// }
