@@ -1,5 +1,5 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
-import { ActivationSelector } from "../Mixins/ActivationSelector";
+import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ActivationSelector } from "../mixins/ActivationSelector";
 import { IAutoSelector } from "./IAutoSelector";
 
 export class AutoSelector extends ItemsObserver.extends(ActivationSelector.extends(HTMLElement)) {

@@ -1,5 +1,5 @@
 /// <reference path="./LoginProvider.ts"/>
-import { MobaIO_Base } from './mobaIO_base_module';
+import { MolbaIO_Base } from './mobaIO_base_module';
 import { LoginProvider } from './LoginProvider';
 declare function io(options?: { forceNew?: boolean, path?: string, autoConnect?: boolean }): MobaIO_Client.ClientSocketInterface;
 

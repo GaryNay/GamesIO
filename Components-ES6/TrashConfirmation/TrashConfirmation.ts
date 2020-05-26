@@ -1,5 +1,5 @@
-import { ActivationSelector } from "../Mixins/ActivationSelector";
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ActivationSelector } from "../mixins/ActivationSelector";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { TemplateRenderer } from "../mixins/TemplateRenderer";
 import { ITrashConfirmation } from "./ITrashConfirmation";
 

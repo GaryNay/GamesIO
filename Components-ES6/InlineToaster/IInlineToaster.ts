@@ -1,5 +1,5 @@
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
-import { IItemsObserver } from "../Mixins/IItemsObserver";
+import { IItemsObserver } from "../mixins/IItemsObserver";
 
 export interface IInlineToaster extends ITemplateRenderer, IItemsObserver, HTMLElement {
 

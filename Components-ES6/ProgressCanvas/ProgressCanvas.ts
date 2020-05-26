@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { IProgressCanvas } from "./IProgressCanvas";
 
 export class ProgressCanvas extends ItemsObserver.extends(HTMLElement) {

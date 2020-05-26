@@ -1,5 +1,5 @@
-import { IActivationSelector } from "../Mixins/IActivationSelector";
-import { IItemsObserver } from "../Mixins/IItemsObserver";
+import { IActivationSelector } from "../mixins/IActivationSelector";
+import { IItemsObserver } from "../mixins/IItemsObserver";
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
 
 export interface ITrashConfirmation extends IActivationSelector, IItemsObserver, ITemplateRenderer, HTMLElement {

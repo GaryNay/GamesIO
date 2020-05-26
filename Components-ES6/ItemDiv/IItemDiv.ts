@@ -1,4 +1,4 @@
-import { IItemsObserver } from "../Mixins/IItemsObserver";
+import { IItemsObserver } from "../mixins/IItemsObserver";
 
 export interface IItemDiv extends IItemsObserver, HTMLElement {
     sourceDocument: HTMLDocument;

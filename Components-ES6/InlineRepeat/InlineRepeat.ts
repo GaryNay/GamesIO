@@ -1,7 +1,7 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { TemplateRenderer } from "../mixins/TemplateRenderer";
 import { IInlineRepeat } from "./IInlineRepeat";
-import { IProxy } from "../Mixins/IProxy";
+import { IProxy } from "../mixins/IProxy";
 
 /** Repeats immediate template for each item in items as alias attribute */
 export class InlineRepeat extends ItemsObserver.extends(TemplateRenderer.extends(HTMLElement)) {

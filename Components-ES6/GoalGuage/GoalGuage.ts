@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 
 export class GoalGuage extends ItemsObserver.extends(HTMLElement) {
     souceDocument: Document;

@@ -1,5 +1,5 @@
 import { ItemSelector } from "../mixins/ItemSelector";
-import { ActivationSelector } from "../Mixins/ActivationSelector";
+import { ActivationSelector } from "../mixins/ActivationSelector";
 import { ICollapseSelector } from "./ICollapseSelector";
 
 export class CollapseSelector extends ItemSelector.extends(ActivationSelector.extends(HTMLElement)) {

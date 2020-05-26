@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { IItemDateInput } from "./IItemDateInput";
 
 export class ItemDateInput extends ItemsObserver.extends(HTMLElement) {

@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { IItemTextInput } from "./IItemTextInput";
 
 export class ItemTextInput extends ItemsObserver.extends(HTMLElement) {

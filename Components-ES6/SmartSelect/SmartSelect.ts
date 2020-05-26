@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { ISmartSelect } from "./ISmartSelect";
 
 /** Only behaves as standard select when more than 1 option is available */

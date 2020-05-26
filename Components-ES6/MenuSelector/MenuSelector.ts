@@ -1,6 +1,6 @@
 import { TemplateRenderer } from "../mixins/TemplateRenderer";
 import { IMenuSelector } from "./IMenuSelector";
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 
 export class MenuSelector extends TemplateRenderer.extends(HTMLElement) {
 

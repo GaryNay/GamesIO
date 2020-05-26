@@ -1,4 +1,4 @@
-import { IItemsObserver } from "../Mixins/IItemsObserver";
+import { IItemsObserver } from "../mixins/IItemsObserver";
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
 
 export interface IInlineRepeat extends IItemsObserver, ITemplateRenderer, HTMLElement {

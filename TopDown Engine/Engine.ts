@@ -63,9 +63,9 @@ export module TopDownEngine {
 
     }
     export interface IRect {
-        p1?: Coord;
+        p1?: ICoord;
         size?: ICoord;
-        p2?: Coord;
+        p2?: ICoord;
     }
     export class Rect {
         p1: Coord;
@@ -77,8 +77,7 @@ export module TopDownEngine {
         constructor(x1: number = 0, y1: number = 0, x2: number = 0, y2: number = 0) {
             this.p1 = new Coord(x1, y1);
             this.p2 = new Coord(x2, y2);
-            this.size.x = Math.abs(x1 - x2);
-            this.size.y = Math.abs(y1 - y2);
+            this.resetSize();
         }
 
         static FromRect(fromRect: Rect | IRect): Rect {
@@ -86,22 +85,42 @@ export module TopDownEngine {
         }
 
         static AreaP(x1: number, y1: number, x2: number, y2: number): number {
-            return Math.sqrt(Math.abs(x1 - x2) ^ 2 + Math.abs(y1 - y2) ^ 2);
+            return Math.abs(x1 - x2) * Math.abs(y1 - y2);
         }
 
         static Area(c1: Coord, c2: Coord): number {
-            return Math.sqrt(Math.abs(c1.x - c2.x) ^ 2 + Math.abs(c1.y - c2.y) ^ 2);
+            return Math.abs(c1.x - c2.x) * Math.abs(c1.y - c2.y);
         }
 
-        setCoords(x1, y1, x2, y2) {
+        resetSize() {
+            this.size.x = Math.abs(this.p1.x - this.p2.x);
+            this.size.y = Math.abs(this.p1.y - this.p2.y);
+        }
+        setCoords(x1: number, y1: number, x2: number, y2: number) {
             this.p1.x = x1;
             this.p1.y = y1;
             this.p2.x = x2;
             this.p2.y = y2;
+            this.resetSize();
+        }
+        setRect(fromRect: Rect) {
+            this.p1.x = fromRect.p1.x;
+            this.p1.y = fromRect.p1.y;
+            this.p2.x = fromRect.p2.x;
+            this.p2.y = fromRect.p2.y;
+            this.resetSize();
+        }
+
+        setRectPad(fromRect: Rect, padding = 0) {
+            this.p1.x = fromRect.p1.x - padding;
+            this.p1.y = fromRect.p1.y - padding;
+            this.p2.x = fromRect.p2.x + padding;
+            this.p2.y = fromRect.p2.y + padding;
+            this.resetSize();
         }
 
         area(): number {
-            return Math.sqrt(this.size.x ^ 2 + this.size.y ^ 2);
+            return this.size.x * this.size.y;
         }
 
         containsCoord(coord: Coord | ICoord) {
@@ -110,11 +129,23 @@ export module TopDownEngine {
                 && (coord.y > this.p1.y)
                 && (coord.y < this.p2.y);
         }
-        containsRect(coord: ICoord, size: ICoord) {
+        containsCoordAndSize(coord: ICoord, size: ICoord) {
             return (coord.x + size.x / 2 > this.p1.x)
                 && (coord.x - size.x / 2 < this.p2.x)
                 && (coord.y + size.y / 2 > this.p1.y)
                 && (coord.y - size.y / 2 < this.p2.y);
+        }
+        containsRect(rect: Rect) {
+            return (this.p1.x < rect.p2.x)
+                && (this.p2.x > rect.p1.x)
+                && (this.p1.y < rect.p2.y)
+                && (this.p2.y > rect.p1.y)
+        }
+        containsRectCoords(p1x: number, p1y: number, p2x: number, p2y: number) {
+            return (this.p1.x < p2x)
+                && (this.p2.x > p1x)
+                && (this.p1.y < p2y)
+                && (this.p2.y > p1y)
         }
         containsCirc(center: Coord, radius: number, distance?: number, closest?: ICoord) {
 
@@ -142,6 +173,20 @@ export module TopDownEngine {
         }
         hyp(): number {
             return this.p1.distanceTo(this.p2);
+        }
+
+        fix() {
+            let o: number;
+            if (this.p2.x < this.p1.x) {
+                o = this.p1.x;
+                this.p1.x = this.p2.x;
+                this.p2.x = o;
+            };
+            if (this.p2.y < this.p1.y) {
+                o = this.p1.y;
+                this.p1.y = this.p2.y;
+                this.p2.y = o;
+            };
         }
 
     }
@@ -245,8 +290,22 @@ export module TopDownEngine {
         }
     }
 
+    export interface TouchResponse {
+        touchedIndex?: number;
+        collide?: boolean;
+    }
+    export interface IBasicFeature {
+        index: number;
+        pos: ICoord;
+        size: ICoord;
+        sizeD: number;
+        sizeR: number;
+        angle: number;
+        scale: number;
+        type: string;
+    }
     export class BasicFeature {
-        index: number = NaN;
+        index: number = null;
         pos: Coord;
         size: Coord;
         sizeD: number;
@@ -265,299 +324,582 @@ export module TopDownEngine {
 
             this.type = type || 'rect';
         }
+
+        gameFrame(scene: Scene) {
+        }
+
+        whenTouched(toucher: BasicFeature, response: TouchResponse = { }): TouchResponse {
+            response.touchedIndex = this.index;
+            return response;
+        }
+
+        export(superExport: IBasicFeature = {} as IBasicFeature): IBasicFeature {
+            superExport.index = this.index;
+            superExport.pos = { x: this.pos.x, y: this.pos.y };
+            superExport.size = { x: this.size.x, y: this.size.y };
+            superExport.sizeD = this.sizeD;
+            superExport.sizeR = this.sizeR;
+            superExport.angle = this.angle;
+            superExport.scale = this.scale;
+            superExport.type = this.type;
+    
+            return superExport;
+        }
+    }
+
+    export interface IMovableFeature extends IBasicFeature {
+        targetPos: ICoord;
+        momentum: IMomentum;
+        facing: IMomentum;
     }
 
     export class MovableFeature extends BasicFeature {
+        targetPos = new Coord();
+        checkPos = new Coord();
+        lastQuery = new Rect();
+        queryResults: QueryTreeResult; 
         momentum: Momentum;
         facing: Momentum;
+        touchResponse: TouchResponse = {};
 
         constructor(facing?: Momentum | IMomentum, posX?: number, posY?: number, sizeX?: number, sizeY?: number, angle?: number, scale?: number, type?: string) {
             super(posX, posY, sizeX, sizeY, angle, scale, type);
 
             this.momentum = new Momentum(this.angle, 0);
             this.facing = Momentum.FromMomentum(facing || this.momentum);
+
+            this.queryResults = { results: [], resultNumber: 0, stack: [] };
+        }
+
+        gameFrame(scene: Scene) {
+            super.gameFrame(scene);
+            // Validate query results
+            if (!this.lastQuery.containsCoordAndSize(this.pos, this.size)) {
+                this.lastQuery.setCoords(this.pos.x - 100, this.pos.y - 100, this.pos.x + 100, this.pos.y + 100);
+                this.queryResults = scene.queryTree.query(this.lastQuery.p1.x, this.lastQuery.p1.y, this.lastQuery.p2.x, this.lastQuery.p2.y, this.queryResults);
+            }
+        }
+
+        touch(feature: BasicFeature, response: TouchResponse = { }): TouchResponse {
+            feature.whenTouched(feature, response);
+            // Examine Response
+            return response;
+        }
+
+        export(superExport: IMovableFeature = {} as IMovableFeature): IMovableFeature {
+            super.export(superExport);
+            superExport.targetPos = { x: this.targetPos.x, y: this.targetPos.y };
+            superExport.momentum = { angle: this.momentum.angle, velocity: this.momentum.velocity };
+            superExport.facing = { angle: this.facing.angle, velocity: this.facing.velocity };
+            return superExport;
         }
     }
 
+    export interface IScene {
+        bounds: ICoord;
+        features: IBasicFeature[];
+    }
+
     export class Scene {
+        bounds = new Coord(2000, 2000);
+        queryTree = new QueryTree();
         features: BasicFeature[] = [];
 
         constructor() {
 
         }
 
+        registerFeature<T>(feature: T & BasicFeature) {
+            this.features.push(feature);
+            feature.index = this.features.length - 1;
+            this.queryTree.insert(feature);
+        }
+
         gameFrame() {
 
+        }
+
+        export(superExport: IScene = {} as IScene): IScene {
+            superExport.bounds = { x: this.bounds.x, y: this.bounds.y };
+            superExport.features = [];
+            for (let i = 0; i < this.features.length; i++) {
+                superExport.features.push(this.features[i].export());
+            }
+            return superExport;
         }
     }
 
     export interface QueryNode {
         active: boolean;
+        nodeIndex: number;
+        isFeature: boolean;
+        featureIndex?: number;
         bounds: Rect;
         union: Rect;
-        child1node: boolean;
         child1: number;
-        child1Cost: number;
-        child2node: boolean;
         child2: number;
-        child2Cost: number;
         parent: number;
         cost: number;
         inheritedCost: number;
-    };
+        bestSibling?: number;
+        bestCost?: number;
+    }
+
+    export interface QueryTreeResult {
+        results: number[],
+        stack: number[],
+        resultNumber: number
+    }
 
     export class QueryTree {
         currentRoot: number;
         nodes: QueryNode[];
+        padding = 5;
+        queryStack: number[] = [];
 
-        totalObjects = 0;
+        totalFeatures = 0;
 
         constructor() {
-            this.nodes = [ QueryTree.NewNode(0,0,0,0, true) ];
+            this.nodes = [ QueryTree.NewNode(0,0,0,0, true, false) ];
+            this.nodes[0].nodeIndex = 0;
             this.currentRoot = 0;
         }
 
-        static NewNode(b1x: number, b1y: number, b2x: number, b2y: number, isActive = false): QueryNode {
+        static NewNode(b1x: number, b1y: number, b2x: number, b2y: number, isActive = false, isFeature = false): QueryNode {
             return {
                 active: isActive,
+                nodeIndex: null,
+                isFeature: isFeature,
+                featureIndex: null,
                 bounds: new Rect(b1x, b1y, b2x, b2y),
                 union: new Rect(),
-                child1node: null, // Since these are null they wont be considered as objects or nodes
                 child1: null,
-                child1Cost: null,
-                child2node: null, // Since these are null they wont be considered as objects or nodes
                 child2: null,
-                child2Cost: null,
                 parent: null,
                 cost: Rect.AreaP(b1x, b1y, b2x, b2y),
                 inheritedCost: 0
             };
         }
 
-        query(q1x: number, q1y: number, q2x: number, q2y: number, queryObject = { results: [] as number[], counter: 0 }): { results: number[], counter: number } {
-            queryObject.counter = 0;
-            queryObject = this.queryNode(0, q1x, q1y, q2x, q2y, queryObject);
-
-            return queryObject;
-        }
-
-        queryNode(nodeIndex: number, q1x: number, q1y: number, q2x: number, q2y: number, queryObject: { results: number[], counter: number }): { results: number[], counter: number } {
-            let thisNode = this.nodes[nodeIndex];
-            if (q1x > thisNode.bounds.p1.x && q2x < thisNode.bounds.p2.x) {
-                if (q1y > thisNode.bounds.p1.y && q2y < thisNode.bounds.p2.y) {
-                    if (thisNode.child1node) {
-                        this.queryNode(thisNode.child1, q1x, q1y, q2x, q2y, queryObject);
-                    }
-                    else if (thisNode.child1node === false) { // Must be explicitly false to be considered an object index!
-                        // Since this is NOT a node, add the value to the results as an object index
-                        queryObject.results[queryObject.counter] = thisNode.child1;
-                        queryObject.counter++;
-                    }
-
-                    if (thisNode.child2node) {
-                        this.queryNode(thisNode.child2, q1x, q1y, q2x, q2y, queryObject);
-                    }
-                    else if (thisNode.child2node === false) { // Must be explicitly false to be considered an object index!
-                        // Since this is NOT a node, add the value to the results as an object index
-                        queryObject.results[queryObject.counter] = thisNode.child2;
-                        queryObject.counter++;
-                    }
-                }
-            }
-
-            return queryObject;
-        }
-
         getNodeIndex(): number {
-            for (let index=0; index++; index < this.nodes.length) {
+            for (let index=0; index < this.nodes.length; index++) {
                 if (!this.nodes[index].active) {
                     return index;
                 }
             }
             this.nodes.push(QueryTree.NewNode(0,0,0,0));
+            this.nodes[this.nodes.length - 1].nodeIndex = this.nodes.length - 1;
             return this.nodes.length - 1;
         }
 
-        insert(feature: BasicFeature & { objectNode?: number }): number {
-            if (this.totalObjects > 1) {
-                let bestSiblingIndex = this.findSibling(feature);
-                let bestSibling = this.nodes[bestSiblingIndex];
+        insert(feature: BasicFeature & { featureNode?: number }): number {
+            let featureNodeIndex = this.getNodeIndex();
+            let featureNode = this.nodes[featureNodeIndex];
+            featureNode.active = true;
+            featureNode.isFeature = true;
+            featureNode.featureIndex = feature.index;
+            featureNode.bounds.setCoords(
+                feature.pos.x - feature.sizeR - this.padding,
+                feature.pos.y - feature.sizeR - this.padding,
+                feature.pos.x + feature.sizeR + this.padding,
+                feature.pos.y + feature.sizeR + this.padding);
+            featureNode.cost = featureNode.bounds.area();
 
-                let siblingParentIndex = this.nodes[bestSiblingIndex].parent;
-                let siblingParent = this.nodes[siblingParentIndex];
+            if (this.totalFeatures > 1) {
+                let bestSiblingIndex = this.findSibling(featureNode);
+                let bestSibling = this.nodes[bestSiblingIndex];
 
                 let newIndex = this.getNodeIndex();
                 let newNode = this.nodes[newIndex];
-                newNode.parent = siblingParentIndex;
-                feature.objectNode = newIndex;
+                newNode.active = true;
+                
+                // newNode.bounds.setRect(bestSibling.bounds);
+                // newNode.bounds = this.union(bestSibling.bounds, featureNode.bounds, newNode.bounds, this.padding);
+                // newNode.cost = newNode.bounds.area();
+                feature.featureNode = featureNodeIndex;
 
-                if (siblingParent.child1 === bestSiblingIndex) {
-                    siblingParent.child1 = newIndex;
-                    siblingParent.child1node = true;
+                if (bestSiblingIndex === this.currentRoot) {
+                    this.currentRoot = newIndex;    
+                    newNode.parent = null;                
                 }
                 else {
-                    siblingParent.child2 = newIndex;
-                    siblingParent.child2node = true;
+                    let siblingParentIndex = this.nodes[bestSiblingIndex].parent;
+                    let siblingParent = this.nodes[siblingParentIndex];
+                    newNode.parent = siblingParentIndex;
+        
+                    if (siblingParent.child1 === bestSiblingIndex) {
+                        siblingParent.child1 = newIndex;
+                    }
+                    else {
+                        siblingParent.child2 = newIndex;
+                    }
                 }
 
-                this.totalObjects++;
+                this.totalFeatures++;
 
-                newNode.child1node = true;
                 newNode.child1 = bestSiblingIndex;
-                newNode.child1Cost = bestSibling.cost;
-                newNode.child2node = false;
-                newNode.child2 = feature.index;
-                newNode.child2Cost = Rect.AreaP(feature.pos.x - feature.size.x, feature.pos.y - feature.size.y, feature.pos.x + feature.size.x, feature.pos.y + feature.size.y);
+                newNode.child2 = featureNodeIndex;
 
+                featureNode.parent = newIndex;
                 bestSibling.parent = newIndex;
-                feature.objectNode = newIndex;
 
-                this.calculateUnions(newIndex, bestSiblingIndex, feature);
+                this.calculateUnions(newIndex);
             }
             else {
-                if (this.totalObjects < 1) {
-                    this.nodes[0].child1node = false;
-                    this.nodes[0].child1 = feature.index;
+                let rootNode = this.nodes[this.currentRoot];
+                if (this.totalFeatures === 1) {
+                    rootNode.child2 = featureNodeIndex;
+                    rootNode.bounds = this.union(this.nodes[rootNode.child1].bounds, featureNode.bounds, rootNode.bounds, this.padding);
+                    this.totalFeatures = 2;
                 }
                 else {
-                    this.nodes[0].child2node = false;
-                    this.nodes[0].child2 = feature.index;
+                    rootNode.child1 = featureNodeIndex;
+                    rootNode.bounds.setRectPad(featureNode.bounds, this.padding);
+                    this.totalFeatures = 1;
                 }
-                this.totalObjects++;
-                return 0;
+                rootNode.cost = rootNode.bounds.area();
+                featureNode.parent = this.currentRoot;
+                feature.featureNode = featureNode.nodeIndex;
+                return this.currentRoot;
             }
-
-
         }
 
-        calculateUnions(nodeIndex: number, growingIndex: number, feature?: BasicFeature) {
+        calculateUnions(nodeIndex: number) {
             let thisNode = this.nodes[nodeIndex];
+            let child1 = this.nodes[thisNode.child1];
+            let child2 = this.nodes[thisNode.child2];
 
-            if (!feature) {
-                thisNode.bounds = this.union(thisNode.bounds, this.nodes[growingIndex].bounds);
-            }
-            else {
-                thisNode.union.setCoords(feature.pos.x - feature.sizeR, feature.pos.y - feature.sizeR, feature.pos.x + feature.sizeR, feature.pos.y + feature.sizeR);
-                thisNode.bounds = this.union(thisNode.bounds, thisNode.union);
-            }
+            thisNode.bounds = this.union(child1.bounds, child2.bounds, thisNode.bounds, this.padding);
 
             thisNode.cost = thisNode.bounds.area();
-
-            this.tryRotations(nodeIndex);
+            this.tryRotations(thisNode);
 
             if (this.currentRoot !== nodeIndex) {
-                this.calculateUnions(this.nodes[nodeIndex].parent, nodeIndex);
+                this.calculateUnions(this.nodes[nodeIndex].parent);
             }
         }
 
-        tryRotations(grandParentIndex: number) {
-            let grandParent = this.nodes[grandParentIndex];
+        /*  Grand- O
+                 /   \
+                /     \                 
+               /       \                
+        Uncle-o  Parent-o
+                      /   \
+             GChld#1-c  #2-c
 
-            if (grandParent.child1node) {
-                // Check parent children for possible swap with uncle
-                let bestIndex = this.checkRotate(this.nodes[grandParent.child1], this.nodes[grandParent.child2].cost);
+        */
+        tryRotations(grandParent:QueryNode) {
+            let testCost: number;
+            let bestCost = grandParent.cost;
+            let bestRotation: number = null;
+            let bestUncleIndex: number = null;
+            let bestChildIndex: number = null;
+            let bestParentIndex: number = null;
 
-                if (bestIndex !== null) {
-                    this.swapChildren(grandParent.child1, bestIndex);
+            if (!this.nodes[ grandParent.child1 ].isFeature) {
+                let parent = this.nodes[grandParent.child1];
+                let child1 = this.nodes[parent.child1];
+                let child2 = this.nodes[parent.child2];
+
+                let uncle = this.nodes[grandParent.child2];
+
+                parent.union = this.union(uncle.bounds, child1.bounds, parent.union, this.padding);
+                grandParent.union = this.union(child2.bounds, parent.union, grandParent.union, this.padding);
+                testCost = grandParent.union.area();
+                if (testCost < bestCost) {
+                    bestCost = testCost;
+                    bestRotation = 1;
+                    bestUncleIndex = uncle.nodeIndex;
+                    bestChildIndex = child2.nodeIndex;
+                    bestParentIndex = parent.nodeIndex;
+                }
+                parent.union = this.union(uncle.bounds, child2.bounds, parent.union, this.padding);
+                grandParent.union = this.union(child1.bounds, parent.union, grandParent.union, this.padding);
+                testCost = grandParent.union.area();
+                if (testCost < bestCost) {
+                    bestCost = testCost;
+                    bestRotation = 2;
+                    bestUncleIndex = uncle.nodeIndex;
+                    bestChildIndex = child1.nodeIndex;
+                    bestParentIndex = parent.nodeIndex;
+                }
+
+            }
+            if (!this.nodes[ grandParent.child2 ].isFeature) {
+                let uncle = this.nodes[grandParent.child1];
+                let parent = this.nodes[grandParent.child2];
+                let child1 = this.nodes[parent.child1];
+                let child2 = this.nodes[parent.child2];
+
+                parent.union = this.union(uncle.bounds, child1.bounds, parent.union, this.padding);
+                grandParent.union = this.union(child2.bounds, parent.union, grandParent.union, this.padding);
+                testCost = grandParent.union.area();
+                if (testCost < bestCost) {
+                    bestCost = testCost;
+                    bestRotation = 3;
+                    bestCost = testCost;
+                    bestUncleIndex = uncle.nodeIndex;
+                    bestChildIndex = child2.nodeIndex;
+                    bestParentIndex = parent.nodeIndex;
+                }
+                parent.union = this.union(uncle.bounds, child2.bounds, parent.union, this.padding);
+                grandParent.union = this.union(child1.bounds, parent.union, grandParent.union, this.padding);
+                testCost = grandParent.union.area();
+                if (testCost < bestCost) {
+                    bestCost = testCost;
+                    bestRotation = 4;
+                    bestUncleIndex = uncle.nodeIndex;
+                    bestChildIndex = child1.nodeIndex;
+                    bestParentIndex = parent.nodeIndex;
                 }
             }
-            if (grandParent.child2node) {
-                // Check parent children for possible swap with uncle
-                let bestIndex = this.checkRotate(this.nodes[grandParent.child2], this.nodes[grandParent.child1].cost);
 
-                if (bestIndex !== null) {
-                    this.swapChildren(grandParent.child2, bestIndex);
-                }
+            if (bestRotation) {
+                this.swapNodes(grandParent, this.nodes[ bestUncleIndex ], this.nodes[ bestParentIndex ], this.nodes[ bestChildIndex ], bestRotation);
             }
         }
 
-        swapChildren(child1: number, child2: number) {
-            let child1Parent = this.nodes[child1].parent;
-            this.nodes[child1].parent = this.nodes[child2].parent;
-            this.nodes[child2].parent = child1Parent;
+        swapNodes(grandParent: QueryNode, uncle: QueryNode, parent: QueryNode, child: QueryNode, rotationType: number) {
+            // console.log(`Swapping gp# ${ grandParent.nodeIndex } w/ rotation type: ${ rotationType }`);
+            // if (grandParent.nodeIndex === this.currentRoot) {
+            //     console.log(`Grandparent is root!`);
+            // }
+            let otherChild: QueryNode;
+            if (rotationType === 1 || rotationType === 3) {
+                parent.child2 = uncle.nodeIndex;
+                otherChild = this.nodes[parent.child1];
+            }
+            else {
+                parent.child1 = uncle.nodeIndex;
+                otherChild = this.nodes[parent.child2];
+            }
+            uncle.parent = parent.nodeIndex;
+
+            if (rotationType === 1 || rotationType === 2) {
+                grandParent.child2 = child.nodeIndex;
+            }
+            else {
+                grandParent.child1 = child.nodeIndex;
+            }
+            child.parent = grandParent.nodeIndex;
+
+            parent.bounds = this.union(uncle.bounds, otherChild.bounds, parent.bounds, this.padding);
+            parent.cost = parent.bounds.area();
+            grandParent.bounds = this.union(parent.bounds, child.bounds, grandParent.bounds, this.padding);
+            grandParent.cost = grandParent.bounds.area();
         }
 
-        checkRotate(parent: QueryNode, bestCost: number) {
-            let grandChild1 = this.nodes[parent.child1];
-            let grandChild2 = this.nodes[parent.child2];
+        /*        O
+                 / \
+                /   \                 
+               /     \                
+            1-o       o
+                     / \
+                  2-c   c
 
-            if (grandChild1.cost < bestCost) {
-                // Can rotate
-                return parent.child1;
-            }
-            else if (grandChild2.cost < bestCost) {
-                // Can rotate
-                return parent.child2;
-            }
-            return null;
-        }
+        */
 
-        union(bound1: Rect, bound2: Rect, unionResult: Rect = bound1): Rect {
-            unionResult.p1.x = bound1.p1.x < bound2.p1.x ? bound1.p1.x : bound2.p1.x;
-            unionResult.p1.y = bound1.p1.y < bound2.p1.y ? bound1.p1.y : bound2.p1.y;
-            unionResult.p2.x = bound1.p2.x > bound2.p2.x ? bound1.p2.x : bound2.p2.x;
-            unionResult.p2.y = bound1.p2.y > bound2.p2.y ? bound1.p2.y : bound2.p2.y;
+        union(bound1: Rect, bound2: Rect, unionResult: Rect = bound1, padding = 0): Rect {
+            unionResult.p1.x = (bound1.p1.x < bound2.p1.x ? bound1.p1.x: bound2.p1.x) - padding;
+            unionResult.p1.y = (bound1.p1.y < bound2.p1.y ? bound1.p1.y: bound2.p1.y) - padding;
+            unionResult.p2.x = (bound1.p2.x > bound2.p2.x ? bound1.p2.x: bound2.p2.x) + padding;
+            unionResult.p2.y = (bound1.p2.y > bound2.p2.y ? bound1.p2.y: bound2.p2.y) + padding;
+            unionResult.resetSize();
             return unionResult;
         }
 
-        findSibling(feature: BasicFeature & { featureCost?: number, bestSibling?: number, bestCost?: number }, nodeIndex: number = this.currentRoot): number {
-            // Measure feature bounds
-            this.nodes[nodeIndex].union.setCoords(feature.pos.x - feature.sizeR, feature.pos.y - feature.sizeR, feature.pos.x + feature.sizeR, feature.pos.y + feature.sizeR);
-            feature.featureCost = this.nodes[nodeIndex].union.area();
+        findSibling(featureNode: QueryNode, nodeIndex: number = this.currentRoot): number {
             // Union to get current best cost (area)
-            this.nodes[nodeIndex].union = this.union(this.nodes[nodeIndex].union, this.nodes[nodeIndex].bounds);
-            feature.bestCost = this.nodes[nodeIndex].union.area() + 5;
-            feature.bestSibling = nodeIndex;
-            this.bAndB (feature, nodeIndex, 0);
-            return feature.bestSibling;
+            this.nodes[nodeIndex].union = this.union(featureNode.bounds, this.nodes[nodeIndex].bounds, this.nodes[nodeIndex].union);
+            featureNode.bestCost = this.nodes[nodeIndex].union.area() + 5;
+            featureNode.bestSibling = nodeIndex;
+            this.bAndB (featureNode, nodeIndex, 0);
+            return featureNode.bestSibling;
         }
 
-        bAndB (feature: BasicFeature & { featureCost?: number, bestSibling?: number, bestCost?: number }, nodeIndex: number, inheritedCost: number) {
+        bAndB (featureNode: QueryNode, nodeIndex: number, inheritedCost: number) {
             let thisNode = this.nodes[nodeIndex];
 
             // Measure feature bounds
-            thisNode.union.setCoords(feature.pos.x - feature.sizeR, feature.pos.y - feature.sizeR, feature.pos.x + feature.sizeR, feature.pos.y + feature.sizeR);
+            // thisNode.union.setCoords(featureNode.pos.x - featureNode.sizeR, featureNode.pos.y - featureNode.sizeR, featureNode.pos.x + featureNode.sizeR, featureNode.pos.y + featureNode.sizeR);
             
-            thisNode.union = this.union(thisNode.union, thisNode.bounds);
+            thisNode.union = this.union(featureNode.bounds, thisNode.bounds, thisNode.union);
             let directCost = thisNode.union.area();
-            if (directCost + inheritedCost < feature.bestCost) {
-                feature.bestSibling = nodeIndex;
-                feature.bestCost = directCost + inheritedCost;
+            if (directCost + inheritedCost < featureNode.bestCost) {
+                featureNode.bestSibling = nodeIndex;
+                featureNode.bestCost = directCost + inheritedCost;
                 thisNode.inheritedCost = (directCost - thisNode.bounds.area()) + inheritedCost;
-                if (feature.featureCost + thisNode.inheritedCost < feature.bestCost) {
-                    if (thisNode.child1node) {
-                        this.bAndB(feature, thisNode.child1, thisNode.inheritedCost);
+                if (featureNode.cost  + thisNode.inheritedCost < featureNode.bestCost) {
+                    if (!thisNode.isFeature) {
+                        this.bAndB(featureNode, thisNode.child1, thisNode.inheritedCost);
                     }
-                    if (thisNode.child2node) {
-                        this.bAndB(feature, thisNode.child2, thisNode.inheritedCost);
+                    if (!thisNode.isFeature) {
+                        this.bAndB(featureNode, thisNode.child2, thisNode.inheritedCost);
                     }
                 }
             }
 
-            return feature.bestSibling;
+            return featureNode.bestSibling;
         }
 
-        remove() {
-
+        reInsert(feature: BasicFeature & { featureNode?: number; }) {
+            this.remove(feature);
+            this.insert(feature);
         }
 
+        remove(feature: BasicFeature & { featureNode?: number }) {
+            if (this.totalFeatures > 2) {
+                let featureNode = this.nodes[feature.featureNode];
+
+                let oldParent = this.nodes[featureNode.parent];
+                let newParent: QueryNode;
+
+                // Get the sibling
+                if (oldParent.child1 === feature.featureNode) {
+                    newParent = this.nodes[oldParent.child2];
+                }
+                else {
+                    newParent = this.nodes[oldParent.child1];
+                }
+
+                if (oldParent.nodeIndex !== this.currentRoot) {
+                    let grandParent = this.nodes[oldParent.parent];
+                    if (grandParent.child1 === oldParent.nodeIndex) {
+                        grandParent.child1 = newParent.nodeIndex;
+                    }
+                    else {
+                        grandParent.child2 = newParent.nodeIndex;
+                    }
+                    newParent.parent = grandParent.nodeIndex;
+                }
+                else {
+                    // console.log(`Removed old root!`);
+                    this.currentRoot = newParent.nodeIndex;
+                }
+
+                featureNode.active = false;
+                oldParent.active = false;
+                feature.featureNode = null;
+
+                this.totalFeatures--;
+
+                if (!newParent.isFeature) {
+                    this.calculateUnions(newParent.nodeIndex);
+                }
+            }
+            else {
+                let rootNode = this.nodes[this.currentRoot];
+                let featureNode = this.nodes[ feature.featureNode ];
+                if (this.totalFeatures === 2) {
+                    if (rootNode.child1 === featureNode.nodeIndex) {
+                        rootNode.child1 = rootNode.child2;
+                    }
+                    rootNode.child2 = null;
+                    rootNode.bounds.setRectPad(this.nodes[ rootNode.child1 ].bounds, this.padding);
+                    rootNode.cost = rootNode.bounds.area();
+                    this.totalFeatures = 1;
+                }
+                else {
+                    rootNode.child1 = null;
+                    rootNode.child2 = null;
+                    rootNode.bounds.setCoords(0,0,0,0);
+                    rootNode.cost = 0;
+                    this.totalFeatures = 0;
+                }
+                featureNode.active = false;
+            }
+        }
+
+        renderVisually(canvas: HTMLCanvasElement) {
+            let ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            for (let eachNode of this.nodes) {
+                ctx.beginPath();
+                if (eachNode.isFeature) {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = 'red';
+                    ctx.fillStyle = 'white';
+                    ctx.globalAlpha = 1;
+                }
+                else {
+                    ctx.strokeStyle = 'blue';
+                }
+                ctx.rect(
+                    Math.round(eachNode.bounds.p1.x),
+                    Math.round(eachNode.bounds.p1.y),
+                    Math.round(eachNode.bounds.width()),
+                    Math.round(eachNode.bounds.height())
+                );
+                ctx.stroke();
+                // ctx.fill();
+            }
+        }
+
+        auditTree() {
+            let foundObjects = 0;
+            let nodeStack: number[] = [ this.currentRoot ];
+            
+            while (nodeStack.length) {
+                // Pop node
+                let nextNodeIndex = nodeStack.pop();
+                let nextNode = this.nodes[nextNodeIndex];
+
+                if (nextNode.isFeature) {
+                    foundObjects++;
+                }
+                else {
+                    nodeStack.push(nextNode.child1, nextNode.child2);
+                }
+            }
+
+            console.log(`Found ${ foundObjects } of ${ this.totalFeatures }`);
+        }
+
+        query(q1x: number, q1y: number, q2x: number, q2y: number, queryObject: QueryTreeResult = { results: [], stack: [], resultNumber: 0 }): QueryTreeResult {
+            queryObject.resultNumber = 0;
+            queryObject.stack.push(this.currentRoot);
+
+            while (queryObject.stack.length) {
+                let nextNodeIndex = queryObject.stack.pop();
+                let thisNode = this.nodes[nextNodeIndex];
+
+                if (!thisNode || !thisNode.active) {
+                    continue;
+                }
+
+                if (thisNode.bounds.containsRectCoords(q1x, q1y, q2x, q2y)) {
+                    if (thisNode.isFeature) {
+                        queryObject.results[queryObject.resultNumber] = thisNode.featureIndex;
+                        queryObject.resultNumber++;
+                    }
+                    else {
+                        queryObject.stack.push(thisNode.child1, thisNode.child2);
+                    }
+                }
+            }
+            return queryObject;
+        }
 
     }
+
 } 
 
-var document;
+var document: any;
 if (document) {
-    var require;
+    var require: any;
     if (!require) {
-        let requires = { };
-        (<any>window).require = (filePath) => {
+        var requires: any = { };
+        (<any>window).require = (filePath: string) => {
             return requires[filePath] || {};
         };
-        (<any>window).setRequire = (filePath, requiredObject) => {
+        (<any>window).setRequire = (filePath: string, requiredObject: {}) => {
             requires[filePath] = requiredObject || {};
         };
     }
     if ((<any>window).setRequire) {
+        (<any>window).setRequire('./Engine', { TopDownEngine: TopDownEngine });
         (<any>window).setRequire('./Engine.js', { TopDownEngine: TopDownEngine });
+        (<any>window).setRequire('../TopDown Engine/Engine', { TopDownEngine: TopDownEngine });
+        (<any>window).setRequire('../TopDown Engine/Engine.js', { TopDownEngine: TopDownEngine });
     }
 }

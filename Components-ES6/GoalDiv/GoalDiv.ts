@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { IGoalDiv } from "./IGoalDiv";
 import { ItemDiv } from "../ItemDiv/ItemDiv";
 import { IItemDiv } from "../ItemDiv/IItemDiv";

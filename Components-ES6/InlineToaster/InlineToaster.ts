@@ -1,6 +1,6 @@
 import { TemplateRenderer } from "../mixins/TemplateRenderer";
 import { IInlineToaster } from "./IInlineToaster";
-import { ItemsObserver } from "../Mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver";
 import { IToastSlice } from "./IToastSlice";
 
 //** Provides a toasting interface to users */
