@@ -2,53 +2,39 @@ import express = require('express');
 let app = express();
 import httpImport = require('http');
 let http = new httpImport.Server(app);
-import socketsImport from 'socket.io';
+import socketsImport = require('socket.io');
 let sockets = socketsImport(http);
 import fileSystem = require('fs');
 
-import { ServerGames } from './ServerGames/ServerGames';
-import { TopDownEngine } from "./TopDown Engine/Engine";
+import { ServerGames, User } from '../ServerGames/ServerGames';
+import { TopDownEngine } from '../TopDown Engine/Engine';
+import path = require('path');
 
-app.get('/sockets/', (req, res) => {
-    res.sendFile('/node_modules/socket.io-client/dist/socket.io.js', { root: __dirname });
-});
-app.get('/LoginProvider/', (req, res) => {
-    res.sendFile('/LoginProvider/LoginProvider.js', { root: __dirname });
-});
-app.get('/ServerGames/', (req, res) => {
-    res.sendFile('/ServerGames/ServerGames.js', { root: __dirname });
-});
+// app.get('/sockets', (req, res) => {
+//     res.sendFile('/node_modules/socket.io-client/dist/socket.io.js', { root: __dirname });
+// });
+// app.use('/LoginProvider', express.static('../LoginProvider'));
 
-app.get('/TopDown/', (req, res) => {
-    res.sendFile('/TopDown Engine/Engine.js', { root: __dirname });
-});
-app.get('/ClientProviders/', (req, res) => {
-    res.sendFile('/ClientProviders/ClientProviders.js', { root: __dirname });
-});
+// app.use('/TopDown Engine', express.static('TopDown Engine'));
 
-app.get('/ChatHost/', (req, res) => {
-    res.sendFile('/ChatHost/ChatHost_Client.js', { root: __dirname });
-});
+// app.use('/ClientProviders', express.static('ClientProviders'));
 
-app.get('/Test_Data/', (req, res) => {
-    res.json(JSON.parse(fileSystem.readFileSync(clickerGame.localGameDataPath, 'utf8')));
-    res.json(clickerGame.export());
+// app.use('/ChatHost', express.static('ChatHost'));
 
-});
 
-app.use('/components', express.static('Components-ES6'));
+// app.use('/components', express.static('Components-ES6'));
 
-app.use('/images', express.static('images'));
+// app.use('/images', express.static('images'));
 
-app.get('/', (req, res) => {
-    res.sendFile('/index.html', { root: __dirname });
-});
-app.get('/Test_Client/', (req, res) => {
-    res.sendFile('/TopDown Engine/Test_Client.js', { root: __dirname });
-});
-app.get('/test/', (req, res) => {
-    res.sendFile('/TopDown Engine/Test_Modules.html', { root: __dirname });
-});
+// app.get('/', (req, res) => {
+//     res.redirect('./TemplateClient/TemplateClient.html');
+//     // res.sendFile('/index.html', { root: __dirname });
+// });
+
+process.chdir('..');
+app.use('/TemplateClient', express.static(path.resolve('../TemplateClient')));
+
+// console.log(`The __dirname is ${ __dirname }`);
 
 let portNumber = 3000;
 
@@ -82,7 +68,7 @@ class FeatureClickerGame extends ServerGames.ServerGame {
         }
         console.log(`Clicker: Registered ${this.scene.features.length} features!`);
     }
-    join(user: ServerGames.User) {
+    join(user: User) {
         if (super.join(user)) {
             user.theSocket.on('ready', () => {
                 console.log(`Clicker: ${ user.username } joined!`);
@@ -104,10 +90,10 @@ class FeatureClickerGame extends ServerGames.ServerGame {
         }
         return false;
     }
-    admin(user: ServerGames.User) {
+    admin(user: User) {
         return this.join(user);
     }
-    drop(user: ServerGames.User) {
+    drop(user: User) {
         return super.drop(user);
     }
     end() {
