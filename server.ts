@@ -2,11 +2,11 @@ import express = require('express');
 let app = express();
 import httpImport = require('http');
 let http = new httpImport.Server(app);
-import socketsImport from 'socket.io';
+import socketsImport = require('socket.io');
 let sockets = socketsImport(http);
 import fileSystem = require('fs');
 
-import { ServerGames } from './ServerGames/ServerGames';
+import { ServerGames, User } from './ServerGames/ServerGames';
 import { TopDownEngine } from "./TopDown Engine/Engine";
 
 app.get('/sockets/', (req, res) => {
@@ -82,7 +82,7 @@ class FeatureClickerGame extends ServerGames.ServerGame {
         }
         console.log(`Clicker: Registered ${this.scene.features.length} features!`);
     }
-    join(user: ServerGames.User) {
+    join(user: User) {
         if (super.join(user)) {
             user.theSocket.on('ready', () => {
                 console.log(`Clicker: ${ user.username } joined!`);
@@ -104,10 +104,10 @@ class FeatureClickerGame extends ServerGames.ServerGame {
         }
         return false;
     }
-    admin(user: ServerGames.User) {
+    admin(user: User) {
         return this.join(user);
     }
-    drop(user: ServerGames.User) {
+    drop(user: User) {
         return super.drop(user);
     }
     end() {
