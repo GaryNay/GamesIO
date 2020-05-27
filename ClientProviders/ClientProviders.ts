@@ -1,4 +1,4 @@
-import { TopDownEngine } from "../TopDown Engine/Engine.js";
+import { TopDownEngine } from "../TopDownEngine/Engine.js";
 
 export module ClientProviders {
     export interface IOutputDiv extends HTMLDivElement {

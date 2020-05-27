@@ -7,33 +7,10 @@ let sockets = socketsImport(http);
 import fileSystem = require('fs');
 
 import { ServerGames, User } from './ServerGames/ServerGames';
-import { TopDownEngine } from "./TopDown Engine/Engine";
+import { TopDownEngine } from "./TopDownEngine/NodeJS/Engine";
 
 app.get('/sockets/', (req, res) => {
     res.sendFile('/node_modules/socket.io-client/dist/socket.io.js', { root: __dirname });
-});
-app.get('/LoginProvider/', (req, res) => {
-    res.sendFile('/LoginProvider/LoginProvider.js', { root: __dirname });
-});
-app.get('/ServerGames/', (req, res) => {
-    res.sendFile('/ServerGames/ServerGames.js', { root: __dirname });
-});
-
-app.get('/TopDown/', (req, res) => {
-    res.sendFile('/TopDown Engine/Engine.js', { root: __dirname });
-});
-app.get('/ClientProviders/', (req, res) => {
-    res.sendFile('/ClientProviders/ClientProviders.js', { root: __dirname });
-});
-
-app.get('/ChatHost/', (req, res) => {
-    res.sendFile('/ChatHost/ChatHost_Client.js', { root: __dirname });
-});
-
-app.get('/Test_Data/', (req, res) => {
-    res.json(JSON.parse(fileSystem.readFileSync(clickerGame.localGameDataPath, 'utf8')));
-    res.json(clickerGame.export());
-
 });
 
 app.use('/components', express.static('Components-ES6'));
@@ -41,14 +18,28 @@ app.use('/components', express.static('Components-ES6'));
 app.use('/images', express.static('images'));
 
 app.get('/', (req, res) => {
-    res.sendFile('/index.html', { root: __dirname });
+    res.redirect('./TemplateClient/TemplateClient.html');
+    //res.sendFile('/index.html', { root: __dirname });
 });
-app.get('/Test_Client/', (req, res) => {
-    res.sendFile('/TopDown Engine/Test_Client.js', { root: __dirname });
+app.use('/LoginProvider', express.static('LoginProvider'));
+
+app.use('/TopDownEngine', express.static('TopDownEngine'));
+
+app.use('/ClientProviders', express.static('ClientProviders'));
+
+app.use('/ChatHost', express.static('ChatHost'));
+
+
+app.use('/components', express.static('Components-ES6'));
+
+app.use('/images', express.static('images'));
+
+app.get('/', (req, res) => {
+    res.redirect('./TemplateClient/TemplateClient.html');
+    // res.sendFile('/index.html', { root: __dirname });
 });
-app.get('/test/', (req, res) => {
-    res.sendFile('/TopDown Engine/Test_Modules.html', { root: __dirname });
-});
+
+app.use('/TemplateClient', express.static('TemplateClient'));
 
 let portNumber = 3000;
 
@@ -69,8 +60,8 @@ class FeatureClickerGame extends ServerGames.ServerGame {
 
     gameData: any;
     renderCallback: any;
-    gameDataPath: string = './';
-    localGameDataPath: string = './';
+    gameDataPath: string = '';
+    localGameDataPath: string = '';
     start() {
         super.start();
         
