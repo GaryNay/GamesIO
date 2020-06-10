@@ -1,7 +1,4 @@
-import { IItemsObserver } from "../mixins/IItemsObserver";
-import { IActivationSelector } from "../mixins/IActivationSelector";
-
-export interface IAutoSelector extends IItemsObserver, IActivationSelector, HTMLElement {
+export interface IAutoSelector {
     attributeElementId?: string;
     attributeElement?: HTMLElement;
     attributeValueProperty: string;

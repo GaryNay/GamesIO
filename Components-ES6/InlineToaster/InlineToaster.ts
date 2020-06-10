@@ -1,42 +1,40 @@
-import { TemplateRenderer } from "../mixins/TemplateRenderer";
+import { TemplateRenderer } from "../mixins/TemplateRenderer.js";
 import { IInlineToaster } from "./IInlineToaster";
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { IToastSlice } from "./IToastSlice";
 
 //** Provides a toasting interface to users */
-export class InlineToaster extends TemplateRenderer.extends(ItemsObserver.extends(HTMLElement)) {
+export class InlineToaster extends TemplateRenderer.extends(ItemsObserver.extends(HTMLElement)) implements IInlineToaster {
 
+    toastKey: string;
     activeToastNumber = 0;
+    parser: (input: any) => string;
 
     get active() {
-        let self: IInlineToaster = <any>this;
-        return self.hasAttribute('active');
+        return this.hasAttribute('active');
     }
 
     set active(value: boolean) {
-        let self: IInlineToaster = <any>this;
-        if (!value && self.hasAttribute('active')) {
-            self.removeAttribute('active');
+        if (!value && this.hasAttribute('active')) {
+            this.removeAttribute('active');
         }
-        if (value && !self.hasAttribute('active')) {
-            self.setAttribute('active', '');
+        if (value && !this.hasAttribute('active')) {
+            this.setAttribute('active', '');
         }
     }
 
     get duration(): number {
-        let self: IInlineToaster = <any>this;
-        if (self.hasAttribute('duration')) {
-            return parseInt(self.getAttribute('duration').valueOf());
+        if (this.hasAttribute('duration')) {
+            return parseInt(this.getAttribute('duration').valueOf());
         }
     }
 
     set duration(value: number) {
-        let self: IInlineToaster = <any>this;
         if (value) {
-            self.setAttribute('duration', `${value}`);
+            this.setAttribute('duration', `${value}`);
         }
-        if (!value && self.hasAttribute('duration')) {
-            self.removeAttribute('duration');
+        if (!value && this.hasAttribute('duration')) {
+            this.removeAttribute('duration');
         }
     }
 
@@ -46,92 +44,87 @@ export class InlineToaster extends TemplateRenderer.extends(ItemsObserver.extend
     }
 
     connectedCallback() {
-        let self: IInlineToaster = <any>this;
-        TemplateRenderer.connectedCallback.apply(self);
 
-        if (!self.hasAttribute('duration')) {
-            self.duration = 1000;
+        if (!this.hasAttribute('duration')) {
+            this.duration = 1000;
         }
-        if (self.hasAttribute('toasts')) {
-            self.toastKey = self.getAttribute('toasts').valueOf();
+        if (this.hasAttribute('toasts')) {
+            this.toastKey = this.getAttribute('toasts').valueOf();
         }
-        if (self.hasAttribute('loaf')) {
-            self.collectionAttribute = 'loaf';
-            ItemsObserver.connectedCallback.apply(self);
+        if (this.hasAttribute('loaf')) {
+            this.collectionAttribute = 'loaf';
         }
-        if (self.hasAttribute('parser')) {
-            let parserPath = self.getAttribute('parser');
+        if (this.hasAttribute('parser')) {
+            let parserPath = this.getAttribute('parser');
             if (parserPath) {
-                self.parser = Function(`return ${parserPath};`)();
+                this.parser = Function(`return ${parserPath};`)();
             }
         }
         else {
-            self.parser = (input) => { return input.toString(); };
+            this.parser = (input) => { return input.toString(); };
         }
 
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
-        TemplateRenderer.disconnectedCallback.apply(this);
-        this.collectionAttribute ? ItemsObserver.disconnectedCallback.apply(this) : null;
+        super.disconnectedCallback();
     }
 
     update(updated: any[], key: string, value: any) {
-        let self: IInlineToaster = <any>this;
         if (value && Array.isArray(value) && value.length) {
-            let nextToast: IToastSlice = Function(`return ${self.collectionAttribute}.pop();`)();
-            self.toast(nextToast.toast, nextToast.template, nextToast.callback);
+            let nextToast: IToastSlice = Function(`return ${this.collectionAttribute}.pop();`)();
+            this.toast(nextToast.toast, nextToast.template, nextToast.callback);
         }
     }
 
     toast(textObject: any, templateName?: string, externalCallbackFn?: (confirmed: boolean) => void) {
-        let self: IInlineToaster = <any>this;
-        self.active = true;
+        this.active = true;
 
-        let toasts = Function(`return ${self.toastKey};`)();
+        let toasts = Function(`return ${this.toastKey};`)();
         if (!toasts || parseInt(toasts.length) === NaN) {
-            toasts = Function(`return ${self.toastKey} = [];`)();
+            toasts = Function(`return ${this.toastKey} = [];`)();
         }
         let thisToastIndex = toasts.length;
         let closeToastCallback = (confirmed: boolean) => {
             if (externalCallbackFn) {
                 externalCallbackFn(confirmed);
             }
-            toasts = Function(`return ${self.toastKey};`)();
-            self.removeElementCollection(toasts[thisToastIndex].toastElements, self);
-            Function(`${self.toastKey}[${thisToastIndex}] = null;`)();
-            self.activeToastNumber--;
-            if (!self.activeToastNumber) {
-                Function(`${self.toastKey} = [];`)();
-                self.active = false;
+            toasts = Function(`return ${this.toastKey};`)();
+            this.removeElementCollection(toasts[thisToastIndex].toastElements, this);
+            Function(`${this.toastKey}[${thisToastIndex}] = null;`)();
+            this.activeToastNumber--;
+            if (!this.activeToastNumber) {
+                Function(`${this.toastKey} = [];`)();
+                this.active = false;
             }
         };
 
         let thisToast = {
-            text: self.parser(textObject),
+            text: this.parser(textObject),
             confirm: () => {
                 closeToastCallback(true);
             },
             cancel: () => {
                 closeToastCallback(false);
             },
-            toastElements: self.importBoundTemplate({
-                text: `${self.toastKey}[${thisToastIndex}].text`,
-                confirm: `${self.toastKey}[${thisToastIndex}].confirm()`,
-                cancel: `${self.toastKey}[${thisToastIndex}].cancel()`
+            toastElements: this.importBoundTemplate({
+                text: `${this.toastKey}[${thisToastIndex}].text`,
+                confirm: `${this.toastKey}[${thisToastIndex}].confirm()`,
+                cancel: `${this.toastKey}[${thisToastIndex}].cancel()`
             }, templateName) as Element[]
         };
 
-        Function(`${self.toastKey}[${thisToastIndex}] = arguments[0];`)( thisToast );
+        Function(`${this.toastKey}[${thisToastIndex}] = arguments[0];`)( thisToast );
 
-        self.renderElementCollection(thisToast.toastElements, self);
-        self.activeToastNumber++;
+        this.renderElementCollection(thisToast.toastElements, this);
+        this.activeToastNumber++;
 
         setTimeout(() => {
-            toasts = Function(`return ${self.toastKey};`)();
+            toasts = Function(`return ${this.toastKey};`)();
             if (toasts && toasts[thisToastIndex]) {
                 closeToastCallback(false);
             }
-        }, self.duration);
+        }, this.duration);
     }
 }

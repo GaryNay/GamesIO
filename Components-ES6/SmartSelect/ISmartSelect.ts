@@ -1,6 +1,6 @@
 import { IItemsObserver } from "../mixins/IItemsObserver";
 
-export interface ISmartSelect extends IItemsObserver, HTMLElement {
+export interface ISmartSelect extends IItemsObserver {
     sourceDocument: HTMLDocument;
     containerSpan: HTMLSpanElement;
     span: HTMLSpanElement;
@@ -18,6 +18,6 @@ export interface ISmartSelect extends IItemsObserver, HTMLElement {
     selectOptionByValue: (optionValue?, suppressClick?: boolean) => void;
     selectOption: (optionIndex?, suppressClick?: boolean) => void;
     updateOptions: () => void;
-    clicked();
+    clicked(): void;
     selected: () => void;
 }

@@ -1,53 +1,52 @@
-import { ItemSelector } from "../mixins/ItemSelector";
+import { ItemSelector } from "../mixins/ItemSelector.js";
 import { ITrashSelector } from "./ITrashSelector";
 
 /** Adds or removes observed item to provided trash array */
-export class TrashSelector extends ItemSelector.extends(HTMLElement) {
+export class TrashSelector extends ItemSelector.extends(HTMLElement) implements ITrashSelector {
+    trashItemKey: string;
+    trashCollectionKey: string;
 
     constructor() {
         super();
     }
 
     connectedCallback() {
-        let self: ITrashSelector = <any>this;
-        self.sourceDocument = self.sourceDocument || document;
+        this.sourceDocument = this.sourceDocument || document;
 
-        if (self.hasAttribute('item')) {
-            self.trashItemKey = self.getAttribute('item').valueOf();
+        if (this.hasAttribute('item')) {
+            this.trashItemKey = this.getAttribute('item').valueOf();
         }
-        if (self.hasAttribute('trash')) {
-            self.trashCollectionKey = self.getAttribute('trash').valueOf();
+        if (this.hasAttribute('trash')) {
+            this.trashCollectionKey = this.getAttribute('trash').valueOf();
         }
 
-        ItemSelector.connectedCallback.apply(self);
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
-        let self: ITrashSelector = <any>this;
-        if (self.checked) {
-            self.changed(false);
+        if (this.checked) {
+            this.changed(false);
         }
-        ItemSelector.disconnectedCallback.apply(self);
+        super.disconnectedCallback();
     }
 
     changed(checked = this.hasAttribute('checked')) {
-        let self: ITrashSelector = <any>this;
-        let trashCollection = Function(`return ${self.trashCollectionKey};`)();
-        let trashItem = Function(`return ${self.trashItemKey};`)();
+        let trashCollection = Function(`return ${this.trashCollectionKey};`)();
+        let trashItem = Function(`return ${this.trashItemKey};`)();
         if (!checked) {
             if (trashCollection && trashCollection.length > 0) {
                 let filtered = (<any[]>trashCollection).filter((eachItem, eachItemIndex) => {
-                    if (eachItem.trashItemKey === self.trashItemKey) {
+                    if (eachItem.trashItemKey === this.trashItemKey) {
                         return false;
                     }
                     return true;
                 });
-                Function(`${self.trashCollectionKey} = arguments[0];`)( filtered );
+                Function(`${this.trashCollectionKey} = arguments[0];`)( filtered );
                 return;
             }
             return;
         }
-        trashCollection.push({ trashItemKey: self.trashItemKey, trashItem: trashItem, trashSelector: self });
-        Function(`${self.trashCollectionKey} = arguments[0];`)( trashCollection );
+        trashCollection.push({ trashItemKey: this.trashItemKey, trashItem: trashItem, trashSelector: this });
+        Function(`${this.trashCollectionKey} = arguments[0];`)( trashCollection );
     }
 }

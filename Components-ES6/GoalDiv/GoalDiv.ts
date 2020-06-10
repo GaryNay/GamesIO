@@ -1,63 +1,63 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { IGoalDiv } from "./IGoalDiv";
 import { ItemDiv } from "../ItemDiv/ItemDiv";
-import { IItemDiv } from "../ItemDiv/IItemDiv";
 
-export class GoalDiv extends ItemsObserver.extends(HTMLElement) {
+export class GoalDiv extends ItemsObserver.extends(HTMLElement) implements IGoalDiv {
 
     itemDiv: ItemDiv;
+    markup: string;
+    total: number;
+    goal: number;
+    goalProperty: string;
+    getGoalColorStyle: (percent: number) => string;
 
     constructor() {
         super();
     }
 
     connectedCallback() {
-        let self: IGoalDiv = this as any;
 
-        if (self.hasAttribute('color-callback')) {
-            self.getGoalColorStyle = ItemsObserver.getParentTargetReference(self.getAttribute('color-callback')).target || self.getGoalColorStyle;
+        if (this.hasAttribute('color-callback')) {
+            this.getGoalColorStyle = ItemsObserver.GetParentTargetReference(this.getAttribute('color-callback')).target || this.getGoalColorStyle;
         }
 
-        self.collectionAttribute = 'value';
-        ItemsObserver.connectedCallback.apply(self);
+        this.collectionAttribute = 'value';
 
-        if (self.hasAttribute('goal')) {
-            self.goalProperty = self.addObservedKey(self.getAttribute('goal'));
+        super.connectedCallback();
+
+        if (this.hasAttribute('goal')) {
+            this.goalProperty = this.addObservedKey(this.getAttribute('goal'));
         }
 
-        self.itemDiv = document.createElement('item-div') as IItemDiv;
-        self.itemDiv.setAttribute('currency', '');
-        self.itemDiv.setAttribute('item', self.defaultTargetKey);
-        self.itemDiv.className = self.className;
-        self.parentElement.insertBefore(self.itemDiv, self);
+        this.itemDiv = document.createElement('item-div') as ItemDiv;
+        this.itemDiv.setAttribute('currency', '');
+        this.itemDiv.setAttribute('item', this.defaultTargetKey);
+        this.itemDiv.className = this.className;
+        this.parentElement.insertBefore(this.itemDiv, this);
 
-        self.setAttribute('disabled', '');
+        this.setAttribute('disabled', '');
 
-        self.updateColor();
+        this.updateColor();
     }
 
     disconnectedCallback() {
-        ItemsObserver.disconnectedCallback.apply(this);
+        super.disconnectedCallback();
     }
 
     update(updated?: any, key?: string | number, value?: any) {
-        let self: IGoalDiv = this as any;
-
-        if (key === self.defaultTargetProperty) {
-            self.total = value || 0;
+        if (key === this.defaultTargetProperty) {
+            this.total = value || 0;
         }
         else {
-            self.goal = value || 0;
+            this.goal = value || 0;
         }
 
-        if (self.itemDiv) {
-            self.updateColor();
+        if (this.itemDiv) {
+            this.updateColor();
         }
     }
 
     updateColor() {
-        let self: IGoalDiv = this as any;
-
-        self.itemDiv.style.color = self.getGoalColorStyle(self.total / self.goal);
+        this.itemDiv.style.color = this.getGoalColorStyle(this.total / this.goal);
     }
 }

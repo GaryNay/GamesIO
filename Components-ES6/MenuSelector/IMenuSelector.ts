@@ -1,6 +1,6 @@
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
 
-export interface IMenuSelector extends ITemplateRenderer, HTMLElement {
+export interface IMenuSelector extends ITemplateRenderer {
     isMouseOver: boolean;
     attributeElementIds?: string[];
     menuButtonInput: HTMLInputElement;

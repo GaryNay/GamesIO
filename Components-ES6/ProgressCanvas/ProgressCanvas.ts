@@ -1,96 +1,111 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { IProgressCanvas } from "./IProgressCanvas";
 
-export class ProgressCanvas extends ItemsObserver.extends(HTMLElement) {
+export class ProgressCanvas extends ItemsObserver.extends(HTMLElement) implements IProgressCanvas {
+    sourceDocument: HTMLDocument;
+
+    containerSpan: HTMLSpanElement;
+    labelElement?: HTMLSpanElement;
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+
+    labelValue: string;
+    labelProperty?: string;
+    guageMaxProperty?: string;
+    guageMax: number;
+    guageValue: number;
+    guageTicks: number;
+    resolution: number;
+
+    complete: boolean;
+    clicked?: () => void;
+    completedCallback?: (self?: ProgressCanvas) => any;
+    resolveCompleted?: () => void;
 
     constructor() {
         super();
     }
 
     set label(value: string) {
-        let self: IProgressCanvas = <any>this;
-        if (!self.labelElement || !self.labelElement.isConnected) {
-            self.labelElement = self.labelElement || self.sourceDocument.createElement('span');
-            if (self.containerSpan && self.canvas) {
-                self.containerSpan.insertBefore(self.labelElement, self.canvas);
+        if (!this.labelElement || !this.labelElement.isConnected) {
+            this.labelElement = this.labelElement || this.sourceDocument.createElement('span');
+            if (this.containerSpan && this.canvas) {
+                this.containerSpan.insertBefore(this.labelElement, this.canvas);
             }
         }
-        self.labelValue = value;
-        self.labelElement.innerText = `${value}`;
+        this.labelValue = value;
+        this.labelElement.innerText = `${value}`;
 
     }
     get label(): string {
-        return this.labelValue;
+        return (<IProgressCanvas & this>this).labelValue;
     }
 
     connectedCallback() {
-        let self: IProgressCanvas = <any>this;
+        this.sourceDocument = this.sourceDocument || document;
+        this.containerSpan = this.sourceDocument.createElement('span');
+        this.appendChild(this.containerSpan);
+        this.canvas = this.sourceDocument.createElement('canvas');
+        this.containerSpan.appendChild(this.canvas);
 
-        self.sourceDocument = self.sourceDocument || document;
-        self.containerSpan = self.sourceDocument.createElement('span');
-        self.appendChild(self.containerSpan);
-        self.canvas = self.sourceDocument.createElement('canvas');
-        self.containerSpan.appendChild(self.canvas);
-
-        if (self.hasAttribute('on-click')) {
-            let onclickAttribute = self.getAttribute('on-click').valueOf();
-            let passThisValue = self.hasAttribute('pass-on-click') ? self.getAttribute('pass-on-click').valueOf() : null;
-            self.clicked = () => {
-                let clickPTR = ItemsObserver.getParentTargetReference(onclickAttribute);
+        if (this.hasAttribute('on-click')) {
+            let onclickAttribute = this.getAttribute('on-click').valueOf();
+            let passThisValue = this.hasAttribute('pass-on-click') ? this.getAttribute('pass-on-click').valueOf() : null;
+            this.clicked = () => {
+                let clickPTR = ItemsObserver.GetParentTargetReference(onclickAttribute);
                 if (typeof clickPTR.target === 'function') {
-                    let itemPTR = ItemsObserver.getParentTargetReference(self.defaultTargetKey);
+                    let itemPTR = ItemsObserver.GetParentTargetReference(this.defaultTargetKey);
                     clickPTR.target.apply(clickPTR.parent, [ passThisValue || itemPTR.target ]);
                 }
             };
-            self.containerSpan.addEventListener('click', (e) => {
-                self.clicked();
+            this.containerSpan.addEventListener('click', (e) => {
+                this.clicked();
             });
         }
 
-        if (self.hasAttribute('label-value')) {
-            self.label = self.getAttribute('label-value').valueOf();
+        if (this.hasAttribute('label-value')) {
+            this.label = this.getAttribute('label-value').valueOf();
         }
 
-        self.resolution = 100;
-        if (self.hasAttribute('resolution')) {
-            self.resolution = parseInt(self.getAttribute('resolution').valueOf()) || 100;
+        this.resolution = 100;
+        if (this.hasAttribute('resolution')) {
+            this.resolution = parseInt(this.getAttribute('resolution').valueOf()) || 100;
         }
 
-        if (self.hasAttribute('guage-ticks')) {
-            self.guageTicks = parseInt(self.getAttribute('guage-ticks').valueOf()) || 10;
+        if (this.hasAttribute('guage-ticks')) {
+            this.guageTicks = parseInt(this.getAttribute('guage-ticks').valueOf()) || 10;
         }
 
-        self.collectionAttribute = 'guage-value';
-        ItemsObserver.connectedCallback.apply(self);
+        this.collectionAttribute = 'guage-value';
 
-        self.guageMax = self.guageValue > 100 ? self.guageValue : 100;
-        if (self.hasAttribute('guage-max')) {
-            let guageMaxAttribute = self.getAttribute('guage-max').valueOf();
+        super.connectedCallback();
+
+        this.guageMax = this.guageValue > 100 ? this.guageValue : 100;
+        if (this.hasAttribute('guage-max')) {
+            let guageMaxAttribute = this.getAttribute('guage-max').valueOf();
             if (parseInt(guageMaxAttribute) > 0) {
-                self.guageMax = parseInt(guageMaxAttribute) || 100;
+                this.guageMax = parseInt(guageMaxAttribute) || 100;
             }
             else {
-                self.guageMaxProperty = self.addObservedKey(guageMaxAttribute);
+                this.guageMaxProperty = this.addObservedKey(guageMaxAttribute);
             }
         }
-        if (self.hasAttribute('label-property')) {
-            self.labelProperty = self.addObservedKey(self.getAttribute('label-property').valueOf());
+        if (this.hasAttribute('label-property')) {
+            this.labelProperty = this.addObservedKey(this.getAttribute('label-property').valueOf());
         }
 
     }
 
     disconnectedCallback() {
-        let self: IProgressCanvas = <any>this;
-        ItemsObserver.disconnectedCallback.apply(self);
+        super.disconnectedCallback();
     }
 
-    oncompleted(callbackFn?: (self?: IProgressCanvas) => void): Promise<void> {
-        let self: IProgressCanvas = <any>this;
+    oncompleted(callbackFn?: (self?: ProgressCanvas) => void): Promise<void> {
         if (callbackFn) {
-            self.completedCallback = callbackFn;
+            this.completedCallback = callbackFn;
         }
         return new Promise((resolve, reject) => {
-            self.resolveCompleted = () => {
+            this.resolveCompleted = () => {
                 return resolve();
             };
         });
@@ -98,59 +113,55 @@ export class ProgressCanvas extends ItemsObserver.extends(HTMLElement) {
 
 
     update(updated?: any, key?: string | number, value?: any) {
-        let self: IProgressCanvas = <any>this;
-        if (self.containerSpan) {
-            if (key === self.labelProperty) {
-                self.label = `${value}`;
+        if (this.containerSpan) {
+            if (key === this.labelProperty) {
+                this.label = `${value}`;
             }
-            if (key === self.defaultTargetProperty) {
-                self.guageValue = parseInt(value) || 0;
-                self.readjust();
+            if (key === this.defaultTargetProperty) {
+                this.guageValue = parseInt(value) || 0;
+                this.readjust();
             }
-            if (key === self.guageMaxProperty) {
-                self.guageMax = parseInt(value) || 100;
-                self.readjust();
+            if (key === this.guageMaxProperty) {
+                this.guageMax = parseInt(value) || 100;
+                this.readjust();
             }
         }
     }
 
     readjust() {
-        let self: IProgressCanvas = <any>this;
-
-        let w = self.canvas.width;
-        let h = self.canvas.height;
-        let toPercent = self.guageValue / self.guageMax;
-        let resolution = self.resolution / 100;
+        let w = this.canvas.width;
+        let h = this.canvas.height;
+        let toPercent = this.guageValue / this.guageMax;
+        let resolution = this.resolution / 100;
         let modPercent = ((toPercent % (resolution + .001)) / resolution);
-        if (!self.context) {
-            self.context = self.canvas.getContext('2d');
+        if (!this.context) {
+            this.context = this.canvas.getContext('2d');
         }
-        let ctx = self.context;
+        let ctx = this.context;
         // Adjust guage to percent
         let guageX = modPercent * w;
-        ctx.fillStyle = self.containerSpan.style.color || '#00f000';
+        ctx.fillStyle = this.containerSpan.style.color || '#00f000';
         ctx.fillRect(0, 0, guageX, h);
-        ctx.fillStyle = self.containerSpan.style.backgroundColor || '#a0a0a0';
+        ctx.fillStyle = this.containerSpan.style.backgroundColor || '#a0a0a0';
         ctx.fillRect(guageX, 0, w - guageX, h);
-        ctx.fillStyle = self.containerSpan.style.borderColor || '#1010a0';
-        for (let tick = Math.floor(modPercent * self.guageTicks); tick <= self.guageTicks; tick += 1) {
-            let tickX = (tick / self.guageTicks) * w;
+        ctx.fillStyle = this.containerSpan.style.borderColor || '#1010a0';
+        for (let tick = Math.floor(modPercent * this.guageTicks); tick <= this.guageTicks; tick += 1) {
+            let tickX = (tick / this.guageTicks) * w;
             ctx.fillRect(tickX, 0, 1, h);
         }
 
         if (toPercent >= 100) {
             // Completed
-            self.completed();
+            this.completed();
         }
     }
     completed() {
-        let self: IProgressCanvas = <any>this;
-        if (self.completedCallback) {
-            self.completedCallback(self);
+        if (this.completedCallback) {
+            this.completedCallback(this);
         }
-        if (self.resolveCompleted) {
-            self.resolveCompleted();
+        if (this.resolveCompleted) {
+            this.resolveCompleted();
         }
-        self.complete = true;
+        this.complete = true;
     }
 }

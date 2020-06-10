@@ -1,21 +1,21 @@
-import { IProxy } from "./IProxy";
+import { CustomHTMLElement } from "../CustomHTMLElement";
 
 export interface IItemsObserver {
     /** Used to define collection attribute name. Defaults to item or items */
-    collectionAttribute?: string;
+    collectionAttribute: string;
     /** Maintains original target key syntax */
-    literalTargetKey?: string;
+    literalTargetKey: string;
     /** Default observer target key from collection attribute */
-    defaultTargetKey?: string;
+    defaultTargetKey: string;
     /** Default observer target key's object property for update reference */
-    defaultTargetProperty?: string;
+    defaultTargetProperty: string;
     /** Used to pass additional observer target info from custom attributes */
-    semanticTargetKey?: string;
+    semanticTargetKey: string;
     /** Observed Target Key to internally match on when updating */
-    observedTargetKey?: string;
-    observedTargetKeys?: string[];
+    observedTargetKey: string;
+    observedTargetKeys: string[];
     /** Abstract update to be called when observing changes */
-    update: (updated: {}, key: string, value: any) => void;
+    update(updated: {}, key: string, value: any);
     /** Returns target key's object property for update reference */
     addObservedKey(observedTargetKey: string, observe?: boolean): string;
     /** Observes target key, or all observed keys if ommitted */
@@ -23,3 +23,5 @@ export interface IItemsObserver {
     
     //deepCopy<T>(toCopy: T | IProxy<T>): T;
 }
+
+export interface ItemsObserverElement extends IItemsObserver, CustomHTMLElement {}

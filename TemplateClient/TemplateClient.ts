@@ -18,7 +18,7 @@ namespace TopDownClient {
     export class ChatClient extends ChatHostClient.ChatHost {}
 }
 
-function entry (canvasX, canvasY) {
+(<any>window).entry = function (canvasX, canvasY) {
 
     var canvas = document.getElementById('outputCanvas') as HTMLCanvasElement;
 
@@ -92,5 +92,3 @@ function entry (canvasX, canvasY) {
     var chatHandler = new TopDownClient.ChatClient(ioDiv, document.createElement('div'));
     (<any>window).chatHandler = chatHandler;
 }
-
-(<any>window).entry = entry;

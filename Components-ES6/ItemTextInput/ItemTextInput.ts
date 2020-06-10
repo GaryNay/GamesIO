@@ -1,26 +1,40 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { IItemTextInput } from "./IItemTextInput";
 
-export class ItemTextInput extends ItemsObserver.extends(HTMLElement) {
+export class ItemTextInput extends ItemsObserver.extends(HTMLElement) implements IItemTextInput {
+    sourceDocument: HTMLDocument;
+    ownUpdated: boolean;
+    placeHolder?: string;
+    placeHolderDiv?: HTMLDivElement;
+    multiLine: boolean;
+    numeric: boolean;
+    min?: number;
+    max?: number;
+    autoHeight: boolean;
+    containerSpan: HTMLSpanElement;
+    input?: HTMLInputElement | HTMLTextAreaElement;
+    visibilityObserver?: IntersectionObserver;
+    valueProperty: string;
+    debounce: number;
+    maxLength: number;
+    changed: () => void;
 
     get value() {
-        let self: IItemTextInput = <any>this;
-        return self.input.value;
+        return this.input.value;
     }
 
-    set value(value: string) {
-        let self: IItemTextInput = <any>this;
-        let setValue;
-        if (!self.numeric && value && value.length > self.maxLength) {
-            setValue = value.substr(0, self.maxLength);
+    set value(value: any) {
+        let setValue: number | string;
+        if (!this.numeric && value && value.length > this.maxLength) {
+            setValue = value.substr(0, this.maxLength);
         }
-        if (self.numeric && parseFloat(value) < self.min) {
-            setValue = self.min;
+        if (this.numeric && parseFloat(value) < this.min) {
+            setValue = this.min;
         }
-        if (self.numeric && parseFloat(value) > self.max) {
-            setValue = self.max;
+        if (this.numeric && parseFloat(value) > this.max) {
+            setValue = this.max;
         }
-        self.input.value = `${setValue || value || ''}`;
+        this.input.value = `${setValue || value || ''}`;
     }
 
     validate() {
@@ -33,128 +47,127 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) {
     }
 
     connectedCallback() {
-        let self: IItemTextInput = <any>this;
 
-        if (self.hasAttribute('value-property')) {
-            self.valueProperty = self.getAttribute('value-property').valueOf();
-            self.semanticTargetKey = `${self.valueProperty}`;
+        if (this.hasAttribute('value-property')) {
+            this.valueProperty = this.getAttribute('value-property').valueOf();
+            this.semanticTargetKey = `${this.valueProperty}`;
         }
 
-        self.sourceDocument = self.sourceDocument || document;
-        self.containerSpan = self.sourceDocument.createElement('span');
-        self.appendChild(self.containerSpan);
-        if (self.hasAttribute('multi-line')) {
-            self.multiLine = true;
-            self.input = self.sourceDocument.createElement('textarea');
+        this.sourceDocument = this.sourceDocument || document;
+        this.containerSpan = this.sourceDocument.createElement('span');
+        this.appendChild(this.containerSpan);
+        if (this.hasAttribute('multi-line')) {
+            this.multiLine = true;
+            this.input = this.sourceDocument.createElement('textarea');
 
-            if (self.hasAttribute('auto-height')) {
-                self.autoHeight = true;
+            if (this.hasAttribute('auto-height')) {
+                this.autoHeight = true;
 
                 // Create an IntersectionObserver to initialize height once when made visible
-                self.visibilityObserver = new IntersectionObserver((intersections) => {
+                this.visibilityObserver = new IntersectionObserver((intersections) => {
                     for (let eachIntersect of intersections) {
                         if (eachIntersect.isIntersecting) {
-                            self.ownUpdated = true;
-                            self.update(null, null, null);
-                            self.visibilityObserver.disconnect();
-                            self.visibilityObserver = null;
+                            this.ownUpdated = true;
+                            this.update(null, null, null);
+                            this.visibilityObserver.disconnect();
+                            this.visibilityObserver = null;
                         }
                     }
                 },
                     // Observe on document, notify when remotely shown (.1)
                     { root: null, rootMargin: '0px', threshold: .1 }
                 );
-                self.visibilityObserver.observe(self.input);
+                this.visibilityObserver.observe(this.input);
             }
         }
         else {
-            self.input = self.sourceDocument.createElement('input');
+            this.input = this.sourceDocument.createElement('input');
 
-            if (self.hasAttribute('numeric')) {
-                self.numeric = true;
-                self.input.type = 'number';
-                if (!self.hasAttribute('float')) {
-                    self.input.step = self.hasAttribute('step') ? self.getAttribute('step').valueOf() : '1';
+            if (this.hasAttribute('numeric')) {
+                this.numeric = true;
+                this.input.type = 'number';
+                if (!this.hasAttribute('float')) {
+                    this.input.step = this.hasAttribute('step') ? this.getAttribute('step').valueOf() : '1';
                 }
-                if (self.hasAttribute('min')) {
-                    self.min = parseFloat(self.getAttribute('min').valueOf());
-                    self.input.min = `${self.min}`;
+                if (this.hasAttribute('min')) {
+                    this.min = parseFloat(this.getAttribute('min').valueOf());
+                    this.input.min = `${this.min}`;
                 }
-                if (self.hasAttribute('max')) {
-                    self.max = parseFloat(self.getAttribute('max').valueOf());
-                    self.input.max = `${self.max}`;
+                if (this.hasAttribute('max')) {
+                    this.max = parseFloat(this.getAttribute('max').valueOf());
+                    this.input.max = `${this.max}`;
                 }
             }
             else {
-                self.input.type = 'text';
+                this.input.type = 'text';
             }
         }
 
-        if (!self.numeric) {
-            if (self.hasAttribute('maxlength')) {
-                self.maxLength = parseInt(self.getAttribute('maxlength').valueOf()) || self.maxLength;
+        if (!this.numeric) {
+            if (this.hasAttribute('maxlength')) {
+                this.maxLength = parseInt(this.getAttribute('maxlength').valueOf()) || this.maxLength;
             }
             // A multiline input defaults to 1000 characters, single lines to 100
-            self.maxLength = self.maxLength || (self.multiLine ? 1000 : 100);
-            self.input.maxLength = self.maxLength;
+            this.maxLength = this.maxLength || (this.multiLine ? 1000 : 100);
+            this.input.maxLength = this.maxLength;
 
-            if (self.hasAttribute('placeholder')) {
-                self.placeHolder =  self.getAttribute('placeholder').valueOf();
-                self.placeHolderDiv = self.sourceDocument.createElement('div');
-                self.placeHolderDiv.innerHTML = self.placeHolder;
-                self.placeHolderDiv.setAttribute('placeholder', ''); // Expose an attribute that CSS can select for styling
-                self.placeHolderDiv.setAttribute('disabled', '');
-                self.placeHolderDiv.addEventListener('click', (e) => {
+            if (this.hasAttribute('placeholder')) {
+                this.placeHolder =  this.getAttribute('placeholder').valueOf();
+                this.placeHolderDiv = this.sourceDocument.createElement('div');
+                this.placeHolderDiv.innerHTML = this.placeHolder;
+                this.placeHolderDiv.setAttribute('placeholder', ''); // Expose an attribute that CSS can select for styling
+                this.placeHolderDiv.setAttribute('disabled', '');
+                this.placeHolderDiv.addEventListener('click', (e) => {
                     e.preventDefault();
-                    self.placeHolderDiv.setAttribute('disabled', '');
-                    self.input.removeAttribute('disabled');
-                    self.input.focus();
+                    this.placeHolderDiv.setAttribute('disabled', '');
+                    this.input.removeAttribute('disabled');
+                    this.input.focus();
                 });
-                self.input.addEventListener('blur', () => {
-                    if (!self.value && self.value !== 0) {
-                        self.placeHolderDiv.removeAttribute('disabled');
-                        self.input.setAttribute('disabled', '');
+                this.input.addEventListener('blur', () => {
+                    if (!this.value && this.value !== 0) {
+                        this.placeHolderDiv.removeAttribute('disabled');
+                        this.input.setAttribute('disabled', '');
                     }
                 });
-                self.containerSpan.appendChild(self.placeHolderDiv);
+                this.containerSpan.appendChild(this.placeHolderDiv);
             }
         }
 
-        self.debounce = self.debounce || 25;
-        if (self.hasAttribute('debounce')) {
-            self.debounce = parseInt(self.getAttribute('debounce').valueOf()) || self.debounce;
+        this.debounce = this.debounce || 25;
+        if (this.hasAttribute('debounce')) {
+            this.debounce = parseInt(this.getAttribute('debounce').valueOf()) || this.debounce;
         }
 
-        self.containerSpan.appendChild(self.input);
+        this.containerSpan.appendChild(this.input);
 
-        if (self.hasAttribute('value')) {
-            self.input.value = `${self.getAttribute('value').valueOf()}`;
+        if (this.hasAttribute('value')) {
+            this.input.value = `${this.getAttribute('value').valueOf()}`;
         }
         else {
-            self.input.value = '';
+            this.input.value = '';
         }
 
-        if (self.hasAttribute('on-change')) {
-            let onchangeAttribute = self.getAttribute('on-change').valueOf();
+        if (this.hasAttribute('on-change')) {
+            let onchangeAttribute = this.getAttribute('on-change').valueOf();
             if (onchangeAttribute) {
-                let passThisValue = self.hasAttribute('pass-on-change') ? self.getAttribute('pass-on-change').valueOf() : null;
-                self.changed = () => {
-                    let parentTargetReference = ItemsObserver.getParentTargetReference(onchangeAttribute);
+                let passThisValue = this.hasAttribute('pass-on-change') ? this.getAttribute('pass-on-change').valueOf() : null;
+                this.changed = () => {
+                    let parentTargetReference = ItemsObserver.GetParentTargetReference(onchangeAttribute);
                     if (typeof parentTargetReference.target === 'function') {
-                        parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || self.input.value ]);
+                        parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || this.input.value ]);
                     }
                 };
             }
         }
 
-        if (self.hasAttribute('on-blur')) {
-            let onblurAttribute = self.getAttribute('on-blur').valueOf();
+        if (this.hasAttribute('on-blur')) {
+            let onblurAttribute = this.getAttribute('on-blur').valueOf();
             if (onblurAttribute) {
-                let passThisValue = self.hasAttribute('pass-on-blur') ? self.getAttribute('pass-on-blur').valueOf() : null;
-                self.input.addEventListener('blur', () => {
-                    let parentTargetReference = ItemsObserver.getParentTargetReference(onblurAttribute);
+                let passThisValue = this.hasAttribute('pass-on-blur') ? this.getAttribute('pass-on-blur').valueOf() : null;
+                this.input.addEventListener('blur', () => {
+                    let parentTargetReference = ItemsObserver.GetParentTargetReference(onblurAttribute);
                     if (typeof parentTargetReference.target === 'function') {
-                        parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || self.input.value ]);
+                        parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || this.input.value ]);
                     }
                 });
             }
@@ -162,50 +175,48 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) {
 
         let oldInputValue: string | number, lastKeyPressed: number = 0;
 
-        self.input.addEventListener('input', () => {
+        this.input.addEventListener('input', () => {
             let thisKeyPressed = performance.now();
             lastKeyPressed = thisKeyPressed;
             setTimeout(() => {
                 if (thisKeyPressed === lastKeyPressed) {
-                    if (oldInputValue !== self.value) {
-                        self.validate();
-                        oldInputValue = self.value;
+                    if (oldInputValue !== this.value) {
+                        this.validate();
+                        oldInputValue = this.value;
                         // Trim textValue to maxLength
-                        self.ownUpdated = true;
-                        let ptr = ItemsObserver.getParentTargetReference(self.observedTargetKey);
-                        ptr.parent[ptr.targetName] = self.value;
-                        if (self.changed) {
-                            self.changed();
+                        this.ownUpdated = true;
+                        let ptr = ItemsObserver.GetParentTargetReference(this.observedTargetKey);
+                        ptr.parent[ptr.targetName] = this.value;
+                        if (this.changed) {
+                            this.changed();
                         }
                     }
                 }
-            }, self.debounce);
+            }, this.debounce);
         });
 
-        ItemsObserver.connectedCallback.apply(self);
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
-        let self: IItemTextInput = <any>this;
-        ItemsObserver.disconnectedCallback.apply(self);
+        super.disconnectedCallback();
     }
 
     update(updated: any, key: string, value: any) {
-        let self: IItemTextInput = <any>this;
-        if (!self.ownUpdated) {
-            if (self.placeHolderDiv && (!value && value !== 0)) {
-                self.placeHolderDiv.removeAttribute('disabled');
-                self.input.setAttribute('disabled', '');
+        if (!this.ownUpdated) {
+            if (this.placeHolderDiv && (!value && value !== 0)) {
+                this.placeHolderDiv.removeAttribute('disabled');
+                this.input.setAttribute('disabled', '');
             }
-            self.value = value ? value : '';
-            if (self.changed) {
-                self.changed();
+            this.value = value ? value : '';
+            if (this.changed) {
+                this.changed();
             }
         }
-        self.ownUpdated = false;
-        if (self.autoHeight) {
-            if (self.input.clientHeight < self.input.scrollHeight) {
-                self.input.style.height = `${self.input.scrollHeight}px`;
+        this.ownUpdated = false;
+        if (this.autoHeight) {
+            if (this.input.clientHeight < this.input.scrollHeight) {
+                this.input.style.height = `${this.input.scrollHeight}px`;
             }
         }
     }

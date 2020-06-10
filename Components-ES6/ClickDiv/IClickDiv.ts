@@ -1,6 +1,6 @@
 import { IItemsObserver } from "../mixins/IItemsObserver";
 
-export interface IItemDiv extends IItemsObserver {
+export interface IClickDiv extends IItemsObserver {
     sourceDocument: HTMLDocument;
 
     containerSpan: HTMLSpanElement;

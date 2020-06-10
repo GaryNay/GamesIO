@@ -9,6 +9,22 @@ import fileSystem = require('fs');
 import { ServerGames, User } from './ServerGames/ServerGames';
 import { TopDownEngine } from "./TopDownEngine/NodeJS/Engine";
 
+app.get('/', (req, res) => {
+    res.redirect('web/');
+    // res.sendFile('./servergamesweb/servergamesweb.html', { root: __dirname });
+});
+
+app.get('/Web', (req, res) => {
+    //res.redirect('./servergamesweb/servergamesweb.html');
+    res.sendFile('./servergamesweb/servergamesweb.html', { root: __dirname });
+});
+
+app.get('/WebApp', (req, res) => {
+    //res.redirect('./servergamesweb/servergamesweb.html');
+    res.sendFile('./servergamesweb/servergamesweb.js', { root: __dirname });
+});
+
+
 app.get('/sockets/', (req, res) => {
     res.sendFile('/node_modules/socket.io-client/dist/socket.io.js', { root: __dirname });
 });
@@ -17,10 +33,6 @@ app.use('/components', express.static('Components-ES6'));
 
 app.use('/images', express.static('images'));
 
-app.get('/', (req, res) => {
-    res.redirect('./TemplateClient/TemplateClient.html');
-    //res.sendFile('/index.html', { root: __dirname });
-});
 app.use('/LoginProvider', express.static('LoginProvider'));
 
 app.use('/TopDownEngine', express.static('TopDownEngine'));

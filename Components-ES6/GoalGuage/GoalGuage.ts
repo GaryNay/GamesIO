@@ -1,4 +1,4 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 
 export class GoalGuage extends ItemsObserver.extends(HTMLElement) {
     souceDocument: Document;
@@ -14,48 +14,50 @@ export class GoalGuage extends ItemsObserver.extends(HTMLElement) {
     public tickHeight: number;
     public tickStyle: string;
     private renderCallback: (total: number, goal: number, forcasted?: number) => void;
+    altValueProperty: string;
+    goalProperty: string;
+
     constructor() {
         super();
     }
 
     connectedCallback() {
-        let self: (GoalGuage & HTMLElement) = this as any;
-
-        self.guageType = 'bar';
-        if (self.hasAttribute('guage')) {
-            self.guageType = 'guage';
+        this.guageType = 'bar';
+        if (this.hasAttribute('guage')) {
+            this.guageType = 'guage';
         }
-        if (self.hasAttribute('ring')) {
-            self.guageType = 'altRing';
+        if (this.hasAttribute('ring')) {
+            this.guageType = 'altRing';
         }
 
-        if (self.hasAttribute('color-callback')) {
-            self.getGoalColorStyle = ItemsObserver.getParentTargetReference(self.getAttribute('color-callback')).target || self.getGoalColorStyle;
+        if (this.hasAttribute('color-callback')) {
+            this.getGoalColorStyle = ItemsObserver.GetParentTargetReference(this.getAttribute('color-callback')).target || this.getGoalColorStyle;
         }
 
-        self.collectionAttribute = 'value';
-        ItemsObserver.connectedCallback.apply(self);
+        this.collectionAttribute = 'value';
 
-        if (self.hasAttribute('value2')) {
-            let key = self.getAttribute('value2');
-            self.altValueProperty = self.addObservedKey(key, false);
-            self.observe(key);
+        super.connectedCallback();
+
+        if (this.hasAttribute('value2')) {
+            let key = this.getAttribute('value2');
+            this.altValueProperty = this.addObservedKey(key, false);
+            this.observe(key);
         }
-        if (self.hasAttribute('goal')) {
-            let key = self.getAttribute('goal');
-            self.goalProperty = self.addObservedKey(key, false);
-            self.observe(key);
+        if (this.hasAttribute('goal')) {
+            let key = this.getAttribute('goal');
+            this.goalProperty = this.addObservedKey(key, false);
+            this.observe(key);
         }
 
-        self.containerSpan = document.createElement('span');
-        self.canvas = document.createElement('canvas');
-        let cStyle = getComputedStyle(self);
-        self.canvas.width = parseInt(cStyle.width) || 250;
-        self.canvas.height = parseInt(cStyle.height) || 200;
-        self.containerSpan.appendChild(self.canvas);
-        self.appendChild(self.containerSpan);
+        this.containerSpan = document.createElement('span');
+        this.canvas = document.createElement('canvas');
+        let cStyle = getComputedStyle(this);
+        this.canvas.width = parseInt(cStyle.width) || 250;
+        this.canvas.height = parseInt(cStyle.height) || 200;
+        this.containerSpan.appendChild(this.canvas);
+        this.appendChild(this.containerSpan);
 
-        self.render();
+        this.render();
     }
 
     private getGoalColorStyle: (percent: number) => string = (percent) => {
@@ -71,20 +73,18 @@ export class GoalGuage extends ItemsObserver.extends(HTMLElement) {
     }
 
     update(updated: any, key: string, value: any) {
-        let self: GoalGuage = this as any;
-
-        if (key === (self.defaultTargetProperty || key)) {
-            self.total = value || 0;
+        if (key === (this.defaultTargetProperty || key)) {
+            this.total = value || 0;
         }
-        else if (key === self.altValueProperty) {
-            self.forcasted = value || 0;
+        else if (key === this.altValueProperty) {
+            this.forcasted = value || 0;
         }
-        else if (key === self.goalProperty) {
-            self.goal = value || 0;
+        else if (key === this.goalProperty) {
+            this.goal = value || 0;
         }
 
-        if (self.canvas) {
-            self.render();
+        if (this.canvas) {
+            this.render();
         }
     }
 
@@ -417,8 +417,7 @@ export class GoalGuage extends ItemsObserver.extends(HTMLElement) {
             context.restore();
         },
         altRing: (total: number, goal: number, forcasted: number) => {
-            let self: GoalGuage & HTMLElement = <any>this;
-            let computedStyle = getComputedStyle(self);
+            let computedStyle = getComputedStyle(this);
 
             let writtenStyle = computedStyle.getPropertyValue(`--written-color`);
             let forcastedStyle = computedStyle.getPropertyValue(`--forcasted-color`);

@@ -1,4 +1,4 @@
-export interface IWindowScreenSyncer extends HTMLElement {
+export interface IWindowScreenSyncer {
     isMobile: boolean;
     scaleTarget: HTMLElement;
 }
