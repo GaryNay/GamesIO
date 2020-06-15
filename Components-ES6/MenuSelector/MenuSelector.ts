@@ -4,6 +4,9 @@ import { ItemsObserver } from "../mixins/ItemsObserver.js";
 
 export class MenuSelector extends TemplateRenderer.extends(HTMLElement) implements IMenuSelector {
     isMouseOver: boolean;
+    cssTransition = false;
+    transitioningElements = 0;
+    attributeIncludeSelf = false;
     attributeElementIds?: string[];
     menuButtonInput: HTMLInputElement;
     isMenuOpen: boolean;
@@ -25,6 +28,38 @@ export class MenuSelector extends TemplateRenderer.extends(HTMLElement) implemen
         }
         else if (this.hasAttribute('attribute-elements')) {
             this.attributeElementIds = this.getAttribute('attribute-elements').split(',');
+        }
+
+        if (!this.attributeElementIds || this.hasAttribute('include-self')) {
+            this.attributeIncludeSelf = true;
+        }
+
+        let transitionRun = () => {
+            this.transitioningElements++;
+            console.log(`MenuSelector: Transition Run (${ this.transitioningElements })`);
+        }
+        let transitionEnd = () => {
+            this.transitioningElements--;
+            console.log(`MenuSelector: Transition End (${ this.transitioningElements })`);
+            
+        }
+        if (this.hasAttribute('css-transition')) {
+            this.cssTransition = true;
+            if (this.attributeElementIds) {
+                for (let eachElementId of this.attributeElementIds) {
+                    let eachElement = this.sourceDocument.getElementById(eachElementId);
+                    if (eachElement) {
+                        eachElement.addEventListener('transitionrun', transitionRun);
+                        eachElement.addEventListener('transitioncancel', transitionEnd);
+                        eachElement.addEventListener('transitionend', transitionEnd);
+                    }
+                }
+            }
+            if (this.attributeIncludeSelf) {
+                this.addEventListener('transitionrun', transitionRun);
+                this.addEventListener('transitioncancel', transitionEnd);
+                this.addEventListener('transitionend', transitionEnd);
+            }
         }
 
         if (this.hasAttribute('on-select')) {
@@ -62,20 +97,38 @@ export class MenuSelector extends TemplateRenderer.extends(HTMLElement) implemen
         let closeMenu = () => {
             if (this.isMenuOpen) {
                 this.isMenuOpen = false;
+                this.menuButtonInput.removeEventListener('blur', blurFn);
+
                 if (this.attributeElementIds) {
                     for (let eachId of this.attributeElementIds) {
-                    // Remove the menu-open attribute for requested elements
-                    this.sourceDocument.getElementById(eachId).removeAttribute('menu-open');
+                        // Remove the menu-open attribute for requested elements
+                        this.sourceDocument.getElementById(eachId).removeAttribute('menu-open');
                     }
                 }
-                this.menuButtonInput.removeEventListener('blur', blurFn);
-                this.removeElementCollection(menuFlyoutContent, this.menuButtonSpan);
+                if (this.attributeIncludeSelf) {
+                    this.removeAttribute('menu-open');
+                }
+
+                if (this.cssTransition) {
+                    let closerIndex: any;
+                    let closer = () => {
+                        if (!this.transitioningElements || this.transitioningElements <= 0) {
+                            this.removeElementCollection(menuFlyoutContent, this.menuButtonSpan);
+                            clearInterval(closerIndex);
+                        }
+                    }
+                    closerIndex = setInterval(closer, 100);
+                }
+                else {
+                    this.removeElementCollection(menuFlyoutContent, this.menuButtonSpan);
+                }
             }
         };
         let blurFn = () => {
             if (!this.hasAttribute('persist') && !this.isMouseOver) {
-                closeMenu();
+                return closeMenu();
             }
+            this.menuButtonInput.focus();
         };
 
         this.menuButtonSpan.addEventListener('mouseout', () => {
@@ -86,38 +139,50 @@ export class MenuSelector extends TemplateRenderer.extends(HTMLElement) implemen
         });
 
         this.menuButtonSpan.addEventListener('click', () => {
-            if (!this.isMenuOpen) {
-                this.isMenuOpen = true;
-                this.isMouseOver = true;
-                if (this.attributeElementIds) {
-                    // Set the menu-open attribute for requested elements
-                    for (let eachId of this.attributeElementIds) {
-                        this.sourceDocument.getElementById(eachId).setAttribute('menu-open', '');
+            console.log(`MenuSelector: CLICKED (${ this.transitioningElements })`);
+            if (!this.transitioningElements || this.transitioningElements <= 0) {
+                if (!this.isMenuOpen) {
+                    this.isMenuOpen = true;
+                    this.isMouseOver = true;
+
+                    this.menuButtonInput.addEventListener('blur', blurFn);
+
+                    // Get the actual menu context from the menuContextKey
+                    let menuPtr = this.menuContextKey && ItemsObserver.GetParentTargetReference(this.menuContextKey);
+
+                    // Add the selected function to the target (if it doesn't already exsist, since that would be a user override)
+                    if (menuPtr && menuPtr.target && !menuPtr.target.selected) {
+                        menuPtr.target.selected = (menuSelectedIndex: string) => {
+                            closeMenu();
+                            this.selected(menuPtr.target, menuSelectedIndex);
+                        };
                     }
+                    // Create Flyout Content
+                    menuFlyoutContent = <Node[]>this.importBoundTemplate({
+                        // Pass the menuContextKey into the template so context values can be referenced by its children
+                        ['menu']: `${this.menuContextKey}`
+                    }, 'menu-flyout');
+
+                    this.renderElementCollection(menuFlyoutContent, this.menuButtonSpan);
+
+                    setTimeout(() => {
+                        if (this.attributeElementIds) {
+                            // Set the menu-open attribute for requested elements
+                            for (let eachId of this.attributeElementIds) {
+                                this.sourceDocument.getElementById(eachId).setAttribute('menu-open', '');
+                            }
+                        }
+                        if (this.attributeIncludeSelf) {
+                            this.setAttribute('menu-open', '');
+                        }
+
+                        this.menuButtonInput.focus();
+                    });
                 }
-
-                this.menuButtonInput.addEventListener('blur', blurFn);
-
-                // Get the actual menu context from the menuContextKey
-                let menuPTR = ItemsObserver.GetParentTargetReference(this.menuContextKey);
-                // Add the selected function to the target (if it doesn't already exsist, since that would be a user override)
-                if (!menuPTR.target.selected) {
-                    menuPTR.target.selected = (menuSelectedIndex: string) => {
-                        closeMenu();
-                        this.selected(menuPTR.target, menuSelectedIndex);
-                    };
+                else {
+                    // this.menuButtonInput.focus();
+                    // this.hasAttribute('click-persist') ? this.menuButtonInput.focus() : closeMenu();
                 }
-                // Create Flyout Content
-                menuFlyoutContent = <Node[]>this.importBoundTemplate({
-                    // Pass the menuContextKey into the template so context values can be referenced by its children
-                    ['menu']: `${this.menuContextKey}`
-                }, 'menu-flyout');
-
-                this.renderElementCollection(menuFlyoutContent, this.menuButtonSpan);
-                this.menuButtonInput.focus();
-            }
-            else {
-                closeMenu();
             }
         });
     }
