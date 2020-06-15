@@ -62,13 +62,13 @@ export class ItemsObserver {
         if (ptr.parent) {
             if (ptr.target && !ptr.target.__proxyValue && Array.isArray(ptr.target)) {
                 // We'll need to proxy the array for changes also
-                let observed = new Proxy(ptr.grand[ptr.parentName][ptr.targetName], ItemsObserver.objectProxyHandler);
+                let observed = new Proxy(ptr.grand[ptr.parentName][ptr.targetName], ItemsObserver.objectProxyHandler) as IProxy<any>;
                 observed.__proxyValue = ptr.grand[ptr.parentName][ptr.targetName];
                 observed.__proxyName = ptr.parentQualified + `.${ptr.targetName}`;
                 ptr.grand[ptr.parentName][ptr.targetName] = observed;
             }
             if (!ptr.parent.__proxyValue) {
-                let observed = new Proxy(ptr.grand[ptr.parentName], ItemsObserver.objectProxyHandler);
+                let observed = new Proxy(ptr.grand[ptr.parentName], ItemsObserver.objectProxyHandler) as IProxy<any>;
                 observed.__proxyValue = ptr.grand[ptr.parentName];
                 observed.__proxyName = ptr.parentQualified;
                 ptr.grand[ptr.parentName] = observed;
