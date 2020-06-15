@@ -10,6 +10,7 @@ import { ItemTextInput } from '../Components-ES6/ItemTextInput/ItemTextInput.js'
 import { ItemDateInput } from '../Components-ES6/ItemDateInput/ItemDateInput.js';
 import { TrashConfirmation } from '../Components-ES6/TrashConfirmation/TrashConfirmation.js';
 import { TrashSelector } from '../Components-ES6/TrashSelector/TrashSelector.js';
+import { MenuSelector } from '../Components-ES6/MenuSelector/MenuSelector.js';
 import { SmartSelect } from '../Components-ES6/SmartSelect/SmartSelect.js';
 import { WindowScreenSyncer } from '../Components-ES6/WindowScreenSyncer/WindowScreenSyncer.js';
 
@@ -39,6 +40,7 @@ class ServerGamesWebApp {
         sourceWindow.customElements.define('auto-selector', AutoSelector);
         sourceWindow.customElements.define('trash-selector', TrashSelector);
         sourceWindow.customElements.define('trash-confirmation', TrashConfirmation);
+        sourceWindow.customElements.define('menu-selector', MenuSelector);
         sourceWindow.customElements.define('inline-toaster', InlineToaster);
         sourceWindow.customElements.define('window-screen-syncer', WindowScreenSyncer);
     }

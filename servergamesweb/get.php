@@ -1,33 +1,10 @@
 <?php
 
 $connection;
-$isLoggedIn = true;
-
-function initialize() {
-    global $connection;
-
-    $servername = "localhost";
-    $username = "root";
-    $password = "";
-    
-    try {
-        // Create connection
-        $connection = new mysqli($servername, $username, $password, 'servergames');
-        
-        // Check connection
-        if ($connection->connect_error) {
-            return ;
-        }
-    }
-    catch (any $e) {
-        return ;
-    }
-    
-    return ;
-}
+$isLoggedIn;
 
 function getHomeCards() {
-    return '[ { "text": "Welcome to Games.IO!" } ]';
+    return '[ { "text": "Welcome to Games.IO!" }, { "text": "This is old news! (got ' . $_SESSION['getCounter']++ . ' times)" } ]';
 }
 
 function getActiveGames() {
@@ -49,14 +26,50 @@ function getActiveGames() {
     return json_encode( $resultArray );
 }
 
+function initialize() {
+    global $connection, $isLoggedIn;
+
+    if (!$_SESSION['getCounter']) {
+        $_SESSION['getCounter'] = 0;
+    }
+
+    $servername = "localhost";
+    $username = "root";
+    $password = "";
+    
+    try {
+        // Create connection
+        $connection = new mysqli($servername, $username, $password, 'servergames');
+        
+        // Check connection
+        if ($connection->connect_error) {
+            return ;
+        }
+    }
+    catch (any $e) {
+        return ;
+    }
+    
+    return ;
+}
+
 $t = $_REQUEST["t"];
 if ($t) {
-    initialize();
-    if ($t == "games") {
-        echo getActiveGames();
+    if (!session_id()) {
+        session_start();
     }
+    initialize();
+
+    $isLoggedIn = $_SESSION['isLoggedIn'];
+
     if ($t == "homecards") {
         echo getHomeCards();
+    }
+
+    if ($isLoggedIn) {
+        if ($t == "games") {
+            echo getActiveGames();
+        }
     }
 }
 ?>

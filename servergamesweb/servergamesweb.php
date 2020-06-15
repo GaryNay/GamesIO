@@ -1,4 +1,17 @@
 <html>
+<?php
+
+static $username;
+static $password;
+static $isLoggedIn;
+
+if (!session_id()) {
+    $isLoggedIn = false;
+    session_start();
+    $_SESSION['isLoggedIn'] = $isLoggedIn;
+}
+
+?>
 
 <head>
     <style>
@@ -9,6 +22,7 @@
             width: 100%;
             padding: 0;
             margin: 0;
+            
             --highlight: #dadada;
             --highlight-alt: #e1e1e1;
             --highlight-lighter: #efefef;
@@ -19,23 +33,24 @@
             --font-color: #111;
             --font-color-alt: #ddd;
 
-            --header-height: 120px;
-            --header-tabs-height: 32px;
-            --header-tabs-spacing: 32px;
-            --header-tabs-margin: 8px;
+            --header-height: 7.5rem;
+            --header-tabs-height: 2rem;
+            --header-tabs-spacing: 2rem;
+            --header-tabs-margin: .5rem;
             --header-border-color: black;
             --header-border-width: 1.5px;
             --header-bgcolor: #1a20ff;
-            --drawer-width: 260px;
+            --user-menu-button-width: 5rem;
+            --drawer-width: 16rem;
             --drawer-bgcolor: #111;
 
-            --content-smaller-margin: 16px;
-            --content-larger-margin: 48px;
+            --content-smaller-margin: 1rem;
+            --content-larger-margin: 2.5rem;
 
-            --card-width: 320px;
-            --card-height: 120px;
-            --card-shadow: 10px;
-            --card-spacing: 32px;
+            --card-width: 20rem;
+            --card-height: 7.5rem;
+            --card-shadow: .7rem;
+            --card-spacing: 2rem;
         }
 
         .flex-drawer {
@@ -60,10 +75,7 @@
             right: 0;
         }
 
-        .flex-drawer:hover {
-            width: var(--drawer-width);
-        }
-
+        .flex-drawer:hover,
         .flex-drawer[open] {
             width: var(--drawer-width);
         }
@@ -79,9 +91,66 @@
             margin: 0;
             background-color: var(--header-bgcolor);
 
-            flex-direction: column-reverse;
+            flex-direction: column;
 
             flex: 0 0 var(--header-height);
+        }
+        
+        .header-title {
+            display: flex;
+            flex-direction: row;
+            width: auto;
+            flex: 1 0 auto;
+            flex-direction: row;
+        }
+
+        .header-title > *:first-child {
+            display: flex;
+            flex: 0 0 var(--user-menu-button-width);
+        }
+
+        .header-label {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1 0 auto;
+        }
+
+        .header-label > * {
+            display: block;
+            text-align: center;
+        }
+
+        .user-menu-button {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: grey;
+            flex: 0 0 var(--user-menu-button-width);
+            cursor: pointer;
+            /* transition: 1s; */
+        }
+
+        .user-menu-button > span {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .user-menu-button > span > .flex-drawer {
+            transition: 3s;
+        }
+
+        .user-menu-button[menu-open] > span > .flex-drawer {
+            width: var(--drawer-width);
+        }
+
+        .user-menu-button-content {
+            display: block;
+            text-align: center;
+            font-size: 2rem;
         }
 
         .header-tabs {
@@ -192,22 +261,29 @@
     </style>
 </head>
 
-<?php
-?>
-
 <body onload="app.pageReady(window, 'appTemplate');">
     <template id="appTemplate">
-        <!-- Left Drawer Area -->
         <auto-selector item="app.drawerOpen" attribute-element="appLeftDrawerDiv" use-attribute="open"></auto-selector>
         <div id="appLeftDrawerDiv" class="flex-drawer" left-drawer>
             <div>Drawer Contents</div>
         </div>
-        <div id="appRightDrawerDiv" class="flex-drawer" right-drawer>
+        <!-- <div id="appRightDrawerDiv" class="flex-drawer" right-drawer>
             <div>General Chat</div>
-        </div>
-        <!-- Header Area -->
+        </div> -->
         <div class="header-container">
-            <item-div class="header-title" item="app.headerTitle"></item-div>
+            <div class="header-title">
+                <div class="header-spacer"></div>
+                <div class="header-label"><div>Stuff</div></div>
+                <menu-selector class="user-menu-button" css-transition>
+                    <template menu-button><div class="user-menu-button-content">...</div></template>
+                    <template menu-flyout>
+                        <div class="flex-drawer" right-drawer>
+                            <div class="user-menu-title">User Menu</div>
+                            <div class="user-menu-content"></div>
+                        </div>
+                    </template>
+                </menu-selector>
+            </div>
             <div class="header-tabs">
                 <inline-repeat in-line initial="Home,Games,Forum,About" text>
                     <template item-template>
@@ -222,7 +298,7 @@
         </div>
         <div class="content-container">
             <click-div class="tab-container" click-group click-mirror="Home">
-                <inline-repeat items="app.homeCards" initial="[]" alias="eachGame">
+                <inline-repeat items="app.homeCards" initial="[]" alias="eachCard">
                     <template empty-template>
                         <div class="card-container">
                             <div class="card-content">Nothing to show!</div>
@@ -232,13 +308,13 @@
                     <template item-template>
                         <div class="card-container">
                             <div class="card-content">
-                                <item-div item="{{eachGame}}" display-property="text"></item-div>
+                                <item-div item="{{eachCard}}" display-property="text"></item-div>
                             </div>
                         </div>
                         <div class="card-spacer"></div>
                     </template>
                 </inline-repeat>
-                <inline-ajax get-when-visible href="./get.php?t=homecards" items="app.homeCards"></inline-ajax>
+                <inline-ajax parent-trigger trigger-attribute="selected" href="./get.php?t=homecards" items="app.homeCards"></inline-ajax>
             </click-div>
             <click-div class="tab-container" click-group click-mirror="Games">
                 <inline-repeat items="app.activeGames" initial="[]" alias="eachGame">
@@ -259,13 +335,14 @@
                         <div class="card-spacer"></div>
                     </template>
                 </inline-repeat>
-                <inline-ajax get-when-visible href="./get.php?t=games" items="app.activeGames"></inline-ajax>
+                <inline-ajax parent-trigger trigger-attribute="selected" href="./get.php?t=games" items="app.activeGames"></inline-ajax>
             </click-div>
             <click-div class="tab-container" click-group click-mirror="Forum">
             </click-div>
             <click-div class="tab-container" click-group click-mirror="About">
             </click-div>
         </div>
+        <!-- <window-screen-syncer scale-device mobile-width="640"></window-screen-syncer> -->
     </template>
     <template id="phpErrorTemplate">
         <div>PHP Had a boo boo!</div>
