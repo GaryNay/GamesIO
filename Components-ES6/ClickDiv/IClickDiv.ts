@@ -3,7 +3,6 @@ import { IItemsObserver } from "../mixins/IItemsObserver";
 export interface IClickDiv extends IItemsObserver {
     sourceDocument: HTMLDocument;
 
-    containerSpan: HTMLSpanElement;
     displayProperty: string;
     altDisplayProperty: string;
     formatType: 'currency' | 'date' | 'phone';
