@@ -15,7 +15,6 @@ import { SmartSelect } from '../Components-ES6/SmartSelect/SmartSelect.js';
 import { WindowScreenSyncer } from '../Components-ES6/WindowScreenSyncer/WindowScreenSyncer.js';
 
 class ServerGamesWebApp {
-
     sourceWindow: Window;
     sourceDocument: Document;
 
