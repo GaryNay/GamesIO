@@ -37,7 +37,32 @@ function initialize() {
 }
 
 function getHomeCards() {
+
+    global $connection;
+    $resultArray = array();
+
+    $sql = "SELECT * FROM homecards";
+
+    if (isset($_GET["w"])) {
+
+    }
+
+    if (isset($_GET["skip"])) {
+
+    }
+
+    $result = $connection->query($sql);
+
+    if ($result !== false && $result->num_rows > 0) {
+        while($eachRow = $result->fetch_assoc()) {
+            array_push($resultArray, $eachRow);
+        }
+    }
+
+    return json_encode( $resultArray );
+
     return '[ { "text": "Welcome to Games.IO!" }, { "text": "This is old news! (got ' . $_SESSION['getCounter']++ . ' times)" } ]';
+
 }
 
 function getActiveGames() {

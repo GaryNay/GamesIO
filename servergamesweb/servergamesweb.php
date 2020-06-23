@@ -65,7 +65,7 @@
         </div>
         <div class="content-container">
             <click-div class="tab-container" click-group="tabs" click-mirror="Home" selected>
-                <inline-ajax parent-trigger trigger-attribute="selected" href="./ajax.php?t=homecards" items="app.homeCards">
+                <inline-ajax parent-trigger trigger-attribute="selected" href="./ajax.php?t=homecards&w=new" items="app.homeCards">
                     <template progress>
                         <div class="spinner-div"></div>
                     </template>
@@ -89,6 +89,18 @@
                             </div>
                         </div>
                         <div class="card-spacer"></div>
+                    </template>
+                    <template footer-template>
+                        <inline-ajax get-when-visible href="./ajax.php?t=homecards&skip={{ app.homeCards.length }}" items="app.homeCards">
+                            <template progress>
+                                <div class="spinner-div"></div>
+                            </template>
+                            <template error>
+                                <div class="card-container">
+                                    <div class="card-content">There was an error accessing the network.</div>
+                                </div>
+                            </template>
+                        </inline-ajax>
                     </template>
                 </inline-repeat>
             </click-div>
