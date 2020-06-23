@@ -54,9 +54,11 @@ export class ActivationSelector {
         }
 
         activate = () => {
+            this.active = true;
         }
 
         deactivate = () => {
+            this.active = false;
         }
 
         connectedCallback() {
@@ -86,6 +88,9 @@ export class ActivationSelector {
         }
 
         disconnectedCallback() {
+            if (this.hasAttribute('active')) {
+                this.deactivate();
+            }
             super.disconnectedCallback && super.disconnectedCallback();
         }
     })

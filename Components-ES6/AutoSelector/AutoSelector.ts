@@ -2,7 +2,7 @@ import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { ActivationSelector } from "../mixins/ActivationSelector.js";
 import { IAutoSelector } from "./IAutoSelector";
 
-export class AutoSelector extends ItemsObserver.extends(ActivationSelector.extends(HTMLElement)) implements IAutoSelector {
+export class AutoSelector extends ActivationSelector.extends(ItemsObserver.extends(HTMLElement)) implements IAutoSelector {
 
     attributeElementId?: string;
     attributeElement?: HTMLElement;
@@ -22,8 +22,9 @@ export class AutoSelector extends ItemsObserver.extends(ActivationSelector.exten
         if (this.hasAttribute('attribute-element')) {
             this.attributeElementId = this.getAttribute('attribute-element').valueOf();
         }
+
         if (this.hasAttribute('value')) {
-            this.value = this.getAttribute('value');
+            this.value = this.getAttribute('value').valueOf();
             this.operator = '==';
             if (this.hasAttribute('operator')) {
                 this.operator = this.getAttribute('operator').valueOf();
@@ -41,6 +42,16 @@ export class AutoSelector extends ItemsObserver.extends(ActivationSelector.exten
 
         if (this.attributeValueKey) {
             this.addObservedKey(this.attributeValueKey);
+        }
+
+        if (this.defaultTargetKey) {
+            let targetPtr = ItemsObserver.GetParentTargetReference(this.defaultTargetKey);
+            if (targetPtr.target) {
+                this.activate();
+            }
+            else {
+                this.deactivate();
+            }
         }
     }
 
