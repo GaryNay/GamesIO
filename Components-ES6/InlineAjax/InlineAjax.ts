@@ -80,11 +80,17 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
                 // Create an IntersectionObserver to trigger refresh whenever object becomes visible
                 this.isVisible = false;
                 this.visibilityObserver = new IntersectionObserver((intersections) => {
-                    for (let eachIntersect of intersections) {
-                        if (eachIntersect.isIntersecting) {
-                            // Trigger an ajax call
-                            return this.refresh();
+                    if (!this.isVisible) {
+                        for (let eachIntersect of intersections) {
+                            if (eachIntersect.isIntersecting) {
+                                // Trigger an ajax call
+                                return this.refresh();
+                            }
                         }
+                        this.isVisible = true;
+                    }
+                    else {
+                        this.isVisible = false;
                     }
                 },
                     // Observe on document, notify when remotely shown (.1)
