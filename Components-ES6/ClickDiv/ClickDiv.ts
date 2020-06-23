@@ -23,7 +23,7 @@ export class ClickDiv extends ItemDiv implements IClickDiv {
             groupName = '_gen_';
         }
 
-        if (ClickDiv.clickGroups[groupName] && ClickDiv.clickGroups[ groupName ].includes(leaver)) {
+        if (ClickDiv.clickGroups[ groupName ] && ClickDiv.clickGroups[ groupName ].includes(leaver)) {
             ClickDiv.clickGroups[ groupName ] = ClickDiv.clickGroups[ groupName ].filter((eachMember) => {
                 return eachMember !== leaver;
             });
@@ -85,12 +85,13 @@ export class ClickDiv extends ItemDiv implements IClickDiv {
                     ClickDiv.ToggleAttribute(this, this.clickAttributeName);
                 }
             });
-
         }
+
         if (this.hasAttribute('click-value')) {
             this.clickValue = this.getAttribute('click-value').valueOf();
             this.update(null, null, this.clickValue);
         }
+
         if (this.hasAttribute('click-mirror')) {
             this.mirrorValue = this.getAttribute('click-mirror').valueOf();
         }

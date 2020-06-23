@@ -3,7 +3,8 @@ import { IItemDiv } from "./IItemDiv";
 
 export class ItemDiv extends ItemsObserver.extends(HTMLElement) implements IItemDiv {
     sourceDocument: Document;
-    containerSpan: HTMLSpanElement;
+
+    containerSpan?: HTMLSpanElement;
     clicked: () => void;
     displayProperty: string;
     altDisplayProperty: string;
@@ -19,8 +20,6 @@ export class ItemDiv extends ItemsObserver.extends(HTMLElement) implements IItem
     connectedCallback() {
 
         this.sourceDocument = this.sourceDocument || document;
-        this.containerSpan = this.sourceDocument.createElement('span');
-        this.appendChild(this.containerSpan);
 
         if (this.hasAttribute('on-click')) {
             let onclickAttribute = this.getAttribute('on-click').valueOf();
@@ -32,7 +31,7 @@ export class ItemDiv extends ItemsObserver.extends(HTMLElement) implements IItem
                     clickPTR.target.apply(clickPTR.parent, [passThisValue || itemPTR.target]);
                 }
             };
-            this.containerSpan.addEventListener('click', (e) => {
+            this.addEventListener('click', (e) => {
                 this.clicked();
             });
         }
@@ -72,6 +71,15 @@ export class ItemDiv extends ItemsObserver.extends(HTMLElement) implements IItem
 
         super.connectedCallback();
 
+        if (this.childElementCount) {
+            for (let eachChild of this.children) {
+                if (eachChild.hasAttribute('item-target')) {
+                    this.containerSpan = eachChild as HTMLSpanElement;
+                    break;
+                }
+            }
+        }
+
         if (this.hasAttribute('json')) {
             try {
                 let str = this.getAttribute('json').valueOf();
@@ -91,49 +99,52 @@ export class ItemDiv extends ItemsObserver.extends(HTMLElement) implements IItem
     }
 
     update(updated?: any, key?: string | number, value?: any) {
-        if (this.containerSpan) {
-            let outValue: string;
-            if (this.altDisplayProperty) {
-                outValue = value[this.altDisplayProperty];
+        let outValue: string;
+        if (this.altDisplayProperty) {
+            outValue = value[this.altDisplayProperty];
+        }
+        else {
+            outValue = value;
+        }
+
+        if (this.formatType === 'currency') {
+            if (parseFloat(outValue) !== NaN) {
+                outValue = `$${parseFloat(outValue).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
             }
             else {
-                outValue = value;
+                outValue = '-';
             }
+        }
+        else if (this.formatType === 'date') {
+            if (Date.parse(outValue) !== NaN) {
+                let dateString = new Date(outValue).toISOString();
+                outValue = `${dateString.substr(5, 2)}-${dateString.substr(8, 2)}-${dateString.substr(0, 4)}`;
+            }
+            else {
+                outValue = '-';
+            }
+        }
+        else if (this.formatType === 'phone') {
+            if (parseInt(outValue) !== NaN) {
+                outValue = outValue.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+            }
+            {
+                outValue = '-';
+            }
+        }
 
-            if (this.formatType === 'currency') {
-                if (parseFloat(outValue) !== NaN) {
-                    outValue = `$${parseFloat(outValue).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
-                }
-                else {
-                    outValue = '-';
-                }
-            }
-            else if (this.formatType === 'date') {
-                if (Date.parse(outValue) !== NaN) {
-                    let dateString = new Date(outValue).toISOString();
-                    outValue = `${dateString.substr(5, 2)}-${dateString.substr(8, 2)}-${dateString.substr(0, 4)}`;
-                }
-                else {
-                    outValue = '-';
-                }
-            }
-            else if (this.formatType === 'phone') {
-                if (parseInt(outValue) !== NaN) {
-                    outValue = outValue.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-                }
-                {
-                    outValue = '-';
-                }
-            }
+        if (this.formatRegex && this.formatReplace) {
+            outValue = (outValue || '').replace(new RegExp(this.formatRegex), this.formatReplace);
+        }
+        if (this.formatCallback) {
+            outValue = this.formatCallback(outValue);
+        }
 
-            if (this.formatRegex && this.formatReplace) {
-                outValue = (outValue || '').replace(new RegExp(this.formatRegex), this.formatReplace);
-            }
-            if (this.formatCallback) {
-                outValue = this.formatCallback(outValue);
-            }
-
+        if (this.containerSpan) {
             this.containerSpan.innerText = (outValue || '').toString();
+        }
+        else {
+            this.innerText = (outValue || '').toString();
         }
     }
 }
