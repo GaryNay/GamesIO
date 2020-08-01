@@ -9,7 +9,6 @@ export class ItemSelector {
 
     static extends: <Inherited>(sClass: Constructor<Inherited>) => Constructor<Inherited & ItemSelectorElement> = <any>((superclass: Constructor<CustomHTMLElement>) => class extends superclass implements IItemSelector {
         sourceDocument: HTMLDocument;
-        containerSpan: HTMLSpanElement;
         img: HTMLImageElement;
 
         get checked() {
@@ -31,11 +30,10 @@ export class ItemSelector {
         }
 
         connectedCallback() {
+            this.sourceDocument = this.sourceDocument || document;
+
             super.connectedCallback && super.connectedCallback();
 
-            this.sourceDocument = this.sourceDocument || document;
-            this.containerSpan = this.sourceDocument.createElement('span');
-    
             this.addEventListener('click', () => {
                 this.checked = this.checked ? false : true;
             });
@@ -45,11 +43,11 @@ export class ItemSelector {
                 if (src) {
                     this.img = this.sourceDocument.createElement('img');
                     this.img.src = src;
-                    this.containerSpan.appendChild(this.img);
+                    this.appendChild(this.img);
                 }
             }
     
-            this.appendChild(this.containerSpan);
+            this.appendChild(this);
     
             if (this.hasAttribute('checked')) {
                 this.checked = true;

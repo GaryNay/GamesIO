@@ -2,6 +2,7 @@ import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { TemplateRenderer } from "../mixins/TemplateRenderer.js";
 import { IInlineRepeat } from "./IInlineRepeat";
 import { IProxy } from "../mixins/IProxy";
+import * as e from "express";
 
 /** Repeats immediate template for each item in items as alias attribute */
 export class InlineRepeat extends ItemsObserver.extends(TemplateRenderer.extends(HTMLElement)) implements IInlineRepeat {
@@ -157,6 +158,7 @@ export class InlineRepeat extends ItemsObserver.extends(TemplateRenderer.extends
     }
 
     auditHeader(shouldShow = false) {
+        let renderBeforeElement: Element = this.inLine ? this : null;
         if (!shouldShow) {
             this.resetRenderedItems();
 
@@ -170,7 +172,7 @@ export class InlineRepeat extends ItemsObserver.extends(TemplateRenderer.extends
                     '_passed': `${this.passName}`
                 }, 'empty-template') as Element[];
                 if (this.emptyItemElementCollection) {
-                    this.renderElementCollection(this.emptyItemElementCollection, this.renderToElement);
+                    this.renderElementCollection(this.emptyItemElementCollection, this.renderToElement, renderBeforeElement);
                 }
             }
             return;
@@ -185,7 +187,7 @@ export class InlineRepeat extends ItemsObserver.extends(TemplateRenderer.extends
                     '_passed': `${this.passName}`
                 }, 'heading-template') as Element[];
                 if (this.headingItemElementCollection) {
-                    this.renderElementCollection(this.headingItemElementCollection, this.renderToElement);
+                    this.renderElementCollection(this.headingItemElementCollection, this.renderToElement, renderBeforeElement);
                 }
             }
         }
@@ -204,8 +206,16 @@ export class InlineRepeat extends ItemsObserver.extends(TemplateRenderer.extends
                 this.footerItemElementCollection = this.importBoundTemplate({
                     '_passed': `${this.passName}`
                 }, 'footer-template') as Element[];
+                // let collection = this.renderedItems[ this.renderedItems.length - 1 ].elementCollection;
+                // let lastItemsNextSibling = collection[ collection.length - 1 ].nextElementSibling;
                 if (this.footerItemElementCollection) {
-                    this.renderElementCollection(this.footerItemElementCollection, this.renderToElement);
+                    if (this.inLine) {
+                        this.renderElementCollection(this.footerItemElementCollection, this.renderToElement, this);
+                    }
+                    else {
+                        // this.renderElementCollection(this.footerItemElementCollection, this.renderToElement, lastItemsNextSibling);
+                        this.renderElementCollection(this.footerItemElementCollection, this.renderToElement);
+                    }
                 }
             }
         }

@@ -84,11 +84,15 @@ function getActiveGames() {
     return json_encode( $resultArray );
 }
 
-function tryLogin() {
+function tryLogin($username = null, $password = null) {
     global $connection, $isLoggedIn;
 
-    $username = $_REQUEST["username"];
-    $password = $_REQUEST["password"];
+    if (!$username) {
+        $username = $_REQUEST["username"];
+    }
+    if (!$password) {
+        $password = $_REQUEST["password"];
+    }
 
     if (!$username) {
         serverError("Username is required");
@@ -113,7 +117,7 @@ function tryLogin() {
             return getUserInfo();
         }
         else {
-            serverError('User not found or incorrect password');            
+            serverError('User "' . $username . '" not found or "' . $password . '" is incorrect password');            
         }
     }
     else {
@@ -139,6 +143,33 @@ function tryLogout() {
     return getUserInfo();
 }
 
+function doesUsernameExist($username) {
+    global $connection;
+    
+    $checkName = preg_replace('/[^a-z0-9_]+/i','', $username);
+    
+    $sql = 'SELECT * FROM user u
+            WHERE u.isExpired IS NULL AND u.username = "' . $checkName . '"';
+
+    $result = $connection->query($sql);
+
+    if ($result !== false) {
+        if ($result->num_rows > 0) {
+            if (isset($_SESSION['userData']) && isset($_SESSION['isLoggedIn'])) {
+                $userdata = json_decode($_SESSION['userData']);
+                if ( strcasecmp($checkName, $userdata->username) == 0) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+    else {
+        return serverError('Could not execute query: ' . $connection->error);
+    }
+}
+
 function tryNewUser() {
     global $connection, $isLoggedIn;
 
@@ -153,37 +184,55 @@ function tryNewUser() {
         serverError("Username must use regualar characters");
     }
 
-    $sql = 'SELECT * FROM user u
-            WHERE u.isExpired IS NULL AND u.username = "' . $username . '"';
-
-    $result = $connection->query($sql);
-
-    if ($result !== false) {
-        if ($result->num_rows > 0) {
-            serverError('User already exists');
-        }
-        else {
-            $userSql = 'INSERT INTO user (username, pword)
-                    VALUES ("' . $username . '","' . $password . '")';
-            
-            $userResult = $connection->query($userSql);
-
-            if ($userResult == false) {
-                serverError('Unknown reason user could not be created: ' . $connection->error);
-            }
-
-            return tryLogin();
-        }
+    if (doesUsernameExist($username) > 0) {
+        serverError('User already exists');
     }
     else {
-        serverError('Could not execute query: ' . $connection->error);
+        $userSql = 'INSERT INTO user (username, pword)
+                VALUES ("' . $username . '","' . $password . '")';
+        
+        $userResult = $connection->query($userSql);
+
+        if ($userResult == false) {
+            serverError('Unknown reason user could not be created: ' . $connection->error);
+        }
+
+        return tryLogin();
+    }   
+}
+
+function tryEditUser($newUserInfo) {
+    global $connection, $isLoggedIn;
+
+    $oldUserInfo = json_decode($_SESSION['userData']);
+    
+    $userSql = 'UPDATE user SET username = "' . $newUserInfo->username . '"';
+    
+    if ($newUserInfo->password) {
+        $userSql .= ', password = "' . $newUserInfo->password . '"';
     }
+    $userSql .= ' WHERE username = "' . $oldUserInfo->username . '"';
+
+    $userResult = $connection->query($userSql);
+
+    if ($userResult == false) {
+        serverError('Unknown reason user could not be updated: ' . $connection->error);
+    }
+
+    
+    return tryLogin();
+
 }
 
 function getUserInfo() {
     if (isset($_SESSION['userData']) && isset($_SESSION['isLoggedIn'])) {
         $userdata = json_decode($_SESSION['userData']);
-        return json_encode(array('username' => ($userdata->username), 'isLoggedIn' => $_SESSION['isLoggedIn']));
+        return json_encode(
+            array(
+                'username' => ($userdata->username),
+                'isLoggedIn' => $_SESSION['isLoggedIn']
+            )
+        );
     }
     else {
         
@@ -233,6 +282,39 @@ if (isset($_GET["t"])) {
         }
         else {
             echo json_encode(array('username' => ''));
+        }
+    }
+    else if ($t == "editprofile") {
+        if ($isLoggedIn) {
+            $userdata = json_decode($_SESSION['userData']);
+
+            if (isset($_REQUEST['username']) && $_REQUEST['username'] !== $userdata->username) {
+                // Wants to change username
+                // serverError('Did you want to change your username to ' . $_REQUEST['username'] . '?');
+                $userdata->username = $_REQUEST['username'];
+            }
+            if (isset($_REQUEST['password'])) {
+                // Wants to change password
+                // serverError('Did you want to change your password to ' . $_REQUEST['password'] . '?');
+                $userdata->password = $_REQUEST['password'];
+            }
+            tryEditUser($userdata);
+            echo getUserInfo();
+        }
+        else {
+            echo json_encode(array('username' => ''));
+        }
+    }
+    else if ($t == "usernamecheck") {
+        if (isset($_REQUEST['username'])) {
+            // Check to see if this name is taken
+            if (doesUsernameExist($_REQUEST['username'])) {
+                serverError('Username already exists');
+            };
+            echo $_REQUEST['username'] . ' is available';
+        }
+        else {
+            serverError('No username recieved.');
         }
     }
 }

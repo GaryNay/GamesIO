@@ -12,6 +12,7 @@ import { TrashConfirmation } from '../Components-ES6/TrashConfirmation/TrashConf
 import { TrashSelector } from '../Components-ES6/TrashSelector/TrashSelector.js';
 import { MenuSelector } from '../Components-ES6/MenuSelector/MenuSelector.js';
 import { SmartSelect } from '../Components-ES6/SmartSelect/SmartSelect.js';
+import { TransitionObserver } from '../Components-ES6/TransitionObserver/TransitionObserver.js';
 import { WindowScreenSyncer } from '../Components-ES6/WindowScreenSyncer/WindowScreenSyncer.js';
 
 class ServerGamesWebApp {
@@ -41,6 +42,7 @@ class ServerGamesWebApp {
         sourceWindow.customElements.define('trash-confirmation', TrashConfirmation);
         sourceWindow.customElements.define('menu-selector', MenuSelector);
         sourceWindow.customElements.define('inline-toaster', InlineToaster);
+        sourceWindow.customElements.define('transition-observer', TransitionObserver);
         sourceWindow.customElements.define('window-screen-syncer', WindowScreenSyncer);
     }
 }

@@ -10,7 +10,6 @@ export interface IItemTextInput extends IItemsObserver {
     min?: number;
     max?: number;
     autoHeight: boolean;
-    containerSpan: HTMLSpanElement;
     input?: HTMLInputElement | HTMLTextAreaElement;
     visibilityObserver?: IntersectionObserver;
     valueProperty: string;

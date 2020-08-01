@@ -11,7 +11,6 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) implements
     min?: number;
     max?: number;
     autoHeight: boolean;
-    containerSpan: HTMLSpanElement;
     input?: HTMLInputElement | HTMLTextAreaElement;
     visibilityObserver?: IntersectionObserver;
     valueProperty: string;
@@ -54,11 +53,20 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) implements
         }
 
         this.sourceDocument = this.sourceDocument || document;
-        this.containerSpan = this.sourceDocument.createElement('span');
-        this.appendChild(this.containerSpan);
         if (this.hasAttribute('multi-line')) {
             this.multiLine = true;
-            this.input = this.sourceDocument.createElement('textarea');
+            if (this.childElementCount) {
+                for (let eachChild of this.children) {
+                    if (eachChild.hasAttribute('item-target') && eachChild.tagName === 'TEXTAREA') {
+                        this.input = eachChild as HTMLInputElement;
+                        break;
+                    }
+                }
+            }
+    
+            if (!this.input) {
+                this.input = this.sourceDocument.createElement('textarea');
+            }
 
             if (this.hasAttribute('auto-height')) {
                 this.autoHeight = true;
@@ -81,25 +89,45 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) implements
             }
         }
         else {
-            this.input = this.sourceDocument.createElement('input');
+            if (this.childElementCount) {
+                for (let eachChild of this.children) {
+                    if (eachChild.hasAttribute('item-target') && eachChild.tagName === 'INPUT') {
+                        this.input = eachChild as HTMLInputElement;
+                        break;
+                    }
+                }
+            }
 
-            if (this.hasAttribute('numeric')) {
+            if (!this.input) {
+                this.input = this.sourceDocument.createElement('input');
+            }
+
+            let input = this.input as HTMLInputElement;
+
+            if (this.hasAttribute('type')) {
+                input.setAttribute('type', this.getAttribute('type').valueOf());
+            }
+            else if (this.hasAttribute('numeric')) {
                 this.numeric = true;
-                this.input.type = 'number';
+                input.type = 'number';
                 if (!this.hasAttribute('float')) {
-                    this.input.step = this.hasAttribute('step') ? this.getAttribute('step').valueOf() : '1';
+                    input.step = this.hasAttribute('step') ? this.getAttribute('step').valueOf() : '1';
                 }
                 if (this.hasAttribute('min')) {
                     this.min = parseFloat(this.getAttribute('min').valueOf());
-                    this.input.min = `${this.min}`;
+                    input.min = `${this.min}`;
                 }
                 if (this.hasAttribute('max')) {
                     this.max = parseFloat(this.getAttribute('max').valueOf());
-                    this.input.max = `${this.max}`;
+                    input.max = `${this.max}`;
                 }
             }
             else {
-                this.input.type = 'text';
+                input.type = 'text';
+            }
+
+            if (this.hasAttribute('name')) {
+                input.setAttribute('name', this.getAttribute('name').valueOf());
             }
         }
 
@@ -129,7 +157,7 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) implements
                         this.input.setAttribute('disabled', '');
                     }
                 });
-                this.containerSpan.appendChild(this.placeHolderDiv);
+                this.appendChild(this.placeHolderDiv);
             }
         }
 
@@ -138,7 +166,7 @@ export class ItemTextInput extends ItemsObserver.extends(HTMLElement) implements
             this.debounce = parseInt(this.getAttribute('debounce').valueOf()) || this.debounce;
         }
 
-        this.containerSpan.appendChild(this.input);
+        this.appendChild(this.input);
 
         if (this.hasAttribute('value')) {
             this.input.value = `${this.getAttribute('value').valueOf()}`;

@@ -597,11 +597,10 @@ export module TopDownEngine {
             let bestParentIndex: number = null;
 
             if (!this.nodes[ grandParent.child1 ].isFeature) {
+                let uncle = this.nodes[grandParent.child2];
                 let parent = this.nodes[grandParent.child1];
                 let child1 = this.nodes[parent.child1];
                 let child2 = this.nodes[parent.child2];
-
-                let uncle = this.nodes[grandParent.child2];
 
                 parent.union = this.union(uncle.bounds, child1.bounds, parent.union, this.padding);
                 grandParent.union = this.union(child2.bounds, parent.union, grandParent.union, this.padding);
@@ -613,6 +612,7 @@ export module TopDownEngine {
                     bestChildIndex = child2.nodeIndex;
                     bestParentIndex = parent.nodeIndex;
                 }
+
                 parent.union = this.union(uncle.bounds, child2.bounds, parent.union, this.padding);
                 grandParent.union = this.union(child1.bounds, parent.union, grandParent.union, this.padding);
                 testCost = grandParent.union.area();

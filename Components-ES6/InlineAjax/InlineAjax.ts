@@ -1,11 +1,13 @@
 import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { TemplateRenderer } from "../mixins/TemplateRenderer.js"
+import { TriggerHandler } from "../mixins/TriggerHandler.js";
 import { ClientProviders } from "../../ClientProviders/ClientProviders.js";
 import { IInlineAjax } from "./IInlineAjax";
 import { IProxyHandler } from "../mixins/IProxyHandler.js";
 import { IProxy } from "../mixins/IProxy.js";
+import { Attributes } from "../mixins/Attributes.js";
 
-export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(HTMLElement)) implements IInlineAjax {
+export class InlineAjax extends TriggerHandler.extends(ItemsObserver.extends(TemplateRenderer.extends(Attributes.TemplateStrings(HTMLElement)))) implements IInlineAjax {
     static SerializeForm(form: HTMLFormElement): { name: string, value: any }[] {
         let results = [];
         for (let index = 0; index < form.elements.length; index++) {
@@ -34,8 +36,6 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
 
     sourceDocument: Document;
     xhrProvider: ClientProviders.XhrProvider;
-    visibilityObserver: IntersectionObserver;
-    isVisible: boolean;
     href: string;
     formMethod: string;
     successElementId: string;
@@ -44,19 +44,22 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
     getOnce: boolean;
     getCounter: 0;
 
-    triggerElement: HTMLElement;
-    triggerAttribute: string;
-    attributeObserver: MutationObserver;
     progressElementCollection: Node[] | NodeList;
     errorElementCollection: Node[] | NodeList;
+    inProgress = false;
 
     constructor() {
         super();
     }
 
     connectedCallback() {
-        this.sourceDocument = this.sourceDocument || document;
+
+        this.triggered = () => {
+            this.refresh();
+        }
+        this.executeAttributeTemplatesOnConnect = false;
         super.connectedCallback();
+
         this.getCounter = 0;
 
         if (this.hasAttribute('debounce')) {
@@ -74,62 +77,6 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
             }
             else {
                 this.getOnce = false;
-            }
-            
-            if (this.hasAttribute('get-when-visible')) {
-                // Create an IntersectionObserver to trigger refresh whenever object becomes visible
-                this.isVisible = false;
-                this.visibilityObserver = new IntersectionObserver((intersections) => {
-                    if (!this.isVisible) {
-                        for (let eachIntersect of intersections) {
-                            if (eachIntersect.isIntersecting) {
-                                // Trigger an ajax call
-                                return this.refresh();
-                            }
-                        }
-                        this.isVisible = true;
-                    }
-                    else {
-                        this.isVisible = false;
-                    }
-                },
-                    // Observe on document, notify when remotely shown (.1)
-                    { root: this, rootMargin: '0px', threshold: .1 }
-                );
-                this.visibilityObserver.observe(this);
-            }
-
-            if (this.hasAttribute('trigger-attribute')) {
-                this.triggerAttribute = this.getAttribute('trigger-attribute').valueOf();
-                if (this.hasAttribute('parent-trigger')) {
-                    this.triggerElement = this.parentElement;
-                }
-                else if (!this.hasAttribute('trigger-element')) {
-                    this.triggerElement = this;
-                }
-                else {
-                    this.triggerElement = this.sourceDocument.getElementById(this.getAttribute('trigger-element').valueOf());
-                }
-
-                if (this.triggerElement) {
-                    this.attributeObserver = new MutationObserver((mutationList) => {
-                        for (let eachMutation of mutationList) {
-                            if (eachMutation.type === 'attributes') {
-                                if (eachMutation.attributeName === this.triggerAttribute && this.triggerElement.hasAttribute( this.triggerAttribute )) {
-                                    return this.refresh();
-                                }
-                            }
-                        }
-                    });
-
-                    this.attributeObserver.observe(this.triggerElement, { attributes: true, attributeFilter: [ this.triggerAttribute ]});
-
-                    if (this.triggerElement.hasAttribute( this.triggerAttribute )) {
-                        setTimeout(() => {
-                            return this.refresh();
-                        });
-                    }
-                }
             }
         }
 
@@ -163,8 +110,8 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
         this.startProgress();
         let response;
         try {
+            let href = this.returnExecutedString(this.href);
             if (this.formMethod === 'get') {
-                let href = this.href;
                 if (href.indexOf('?') === -1) {
                     href += '?';
                 }
@@ -180,7 +127,7 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
 
             }
             else {
-                response = await this.xhrProvider.postAsync(this.href, InlineAjax.FormData(parentForm), false);
+                response = await this.xhrProvider.postAsync(href, InlineAjax.FormData(parentForm), false);
             }
             this.endProgress();
             if (this.successElementId) {
@@ -197,16 +144,18 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
     }
 
     async refresh() {
-        return this.defaultTargetKey && this.lastRefresh + this.debounce < performance.now() &&
+        return this.lastRefresh + this.debounce < performance.now() &&
             new Promise(async (resolve, reject) => {
-                if (this.getOnce && this.getCounter > 0) {
+                if (this.inProgress || (this.getOnce && this.getCounter > 0)) {
                     return resolve();
                 };
                 this.startProgress();
                 try {
-                    let response = (await this.xhrProvider.getAsync(this.href)).firstOrDefault();
-                    let ptr = ItemsObserver.GetParentTargetReference(this.defaultTargetKey);
-                    ptr.parent[ ptr.targetName ] = response;
+                    let response = (await this.xhrProvider.getAsync(this.returnExecutedString(this.href))).firstOrDefault();
+                    if (this.defaultTargetKey) {
+                        let ptr = ItemsObserver.GetParentTargetReference(this.defaultTargetKey);
+                        ptr.parent[ ptr.targetName ] = response;
+                    }
                     this.lastRefresh = performance.now();
                     this.endProgress();
                     this.getCounter++;
@@ -227,6 +176,7 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
         if (this.progressElementCollection) {
             this.renderElementCollection(<Node[]>this.progressElementCollection, this);
         }
+        this.inProgress = true;
     }
 
     endProgress() {
@@ -234,6 +184,7 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
             this.removeElementCollection(<Node[]>this.progressElementCollection, this);
             this.progressElementCollection = null;
         }
+        this.inProgress = false;
     }
 
     errorHandler(e) {
@@ -249,12 +200,6 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
     }
 
     disconnectedCallback() {
-        if (this.visibilityObserver) {
-            this.visibilityObserver.disconnect();
-        }
-        if (this.attributeObserver) {
-            this.attributeObserver.disconnect();
-        }
         super.disconnectedCallback();
     }
 
@@ -262,6 +207,7 @@ export class InlineAjax extends ItemsObserver.extends(TemplateRenderer.extends(H
         if (key === 'opacity') {
             debugger;
         }
+        // Trigger the ajax action based on this update (most often to patch)
     }
 
     observationHandler: IProxyHandler = {

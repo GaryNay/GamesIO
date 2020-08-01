@@ -26,45 +26,54 @@ export class ActivationSelector {
             if (this.activeElementId && !this.activeElement) {
                 this.activeElement = this.sourceDocument.getElementById(this.activeElementId);
             }
-            if (!value) {
+
+            let toggleto = value ? true : false;
+            if (this.useAttribute === 'disabled') {
+                toggleto = toggleto ? false : true;
+            }
+
+            if (this.hasAttribute('active')) {
+                if (!value) {
+                    this.removeAttribute('active');
+                    this.deactivate();
+                }
+            }
+            else {
+                if (value) {
+                    this.setAttribute('active', '');
+                    this.activate();
+                }
+            }
+
+            if (toggleto) {
                 if (this.inactiveElement && this.inactiveElement.hasAttribute(this.useAttribute)) {
                     this.inactiveElement.removeAttribute(this.useAttribute);
                 }
                 if (this.activeElement) {
                     this.activeElement.setAttribute(this.useAttribute, this.useAttributeValue || '');
                 }
-                if (this.hasAttribute('active')) {
-                    this.removeAttribute('active');
-                    this.deactivate();
-                }
-                return;
             }
-            if (value) {
+            else {
                 if (this.inactiveElement) {
                     this.inactiveElement.setAttribute(this.useAttribute, this.useAttributeValue || '');
                 }
                 if (this.activeElement && this.activeElement.hasAttribute(this.useAttribute)) {
                     this.activeElement.removeAttribute(this.useAttribute);
                 }
-                if (!this.hasAttribute('active')) {
-                    this.setAttribute('active', '');
-                    this.activate();
-                }
             }
         }
 
         activate = () => {
-            this.active = true;
         }
 
         deactivate = () => {
-            this.active = false;
         }
 
         connectedCallback() {
+            this.sourceDocument = this.sourceDocument || document;
+
             super.connectedCallback && super.connectedCallback();
 
-            this.sourceDocument = this.sourceDocument || document;
             if (this.hasAttribute('inactive-element')) {
                 this.inactiveElementId = this.getAttribute('inactive-element').valueOf();
             }
@@ -89,7 +98,7 @@ export class ActivationSelector {
 
         disconnectedCallback() {
             if (this.hasAttribute('active')) {
-                this.deactivate();
+                this.active = false;
             }
             super.disconnectedCallback && super.disconnectedCallback();
         }
