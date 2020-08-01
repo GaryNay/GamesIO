@@ -2,7 +2,7 @@ import { IActivationSelector } from "../mixins/IActivationSelector";
 import { IItemsObserver } from "../mixins/IItemsObserver";
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
 
-export interface ITrashConfirmation extends IActivationSelector, IItemsObserver, ITemplateRenderer, HTMLElement {
+export interface ITrashConfirmation extends IActivationSelector, IItemsObserver, ITemplateRenderer {
     active: boolean;
     modalActive: boolean;
 

@@ -1,61 +1,65 @@
-import { IItemSelector } from "./IItemSelector";
+import { IItemSelector, ItemSelectorElement } from "./IItemSelector";
+import { CustomHTMLElement } from "../CustomHTMLElement";
+
+interface Constructor<T> {
+    new (): T;
+}
 
 export class ItemSelector {
 
-    static connectedCallback() {
-        let self: IItemSelector & HTMLElement = <any>this;
-        self.sourceDocument = self.sourceDocument || document;
-        self.containerSpan = self.sourceDocument.createElement('span');
-
-        self.addEventListener('click', () => {
-            self.checked = self.checked ? false : true;
-        });
-
-        if (self.hasAttribute('img-src')) {
-            let src = self.getAttribute('img-src').valueOf();
-            if (src) {
-                self.img = self.sourceDocument.createElement('img');
-                self.img.src = src;
-                self.containerSpan.appendChild(self.img);
-            }
-        }
-
-        self.appendChild(self.containerSpan);
-
-        if (self.hasAttribute('checked')) {
-            self.checked = true;
-        }
-
-        self.changed();
-    }
-
-    static disconnectedCallback() {
-        let self: IItemSelector & HTMLElement = <any>this;
-    }
-
-    static extends = (superclass) => class extends superclass implements IItemSelector {
+    static extends: <Inherited>(sClass: Constructor<Inherited>) => Constructor<Inherited & ItemSelectorElement> = <any>((superclass: Constructor<CustomHTMLElement>) => class extends superclass implements IItemSelector {
         sourceDocument: HTMLDocument;
         containerSpan: HTMLSpanElement;
         img: HTMLImageElement;
 
         get checked() {
-            let self: IItemSelector & HTMLElement = <any>this;
-            return self.hasAttribute('checked');
+            return this.hasAttribute('checked');
         }
 
         set checked(val) {
-            let self: IItemSelector & HTMLElement = <any>this;
-            if (val && !self.hasAttribute('checked')) {
-                self.setAttribute('checked', '');
-                self.changed();
+            if (val && !this.hasAttribute('checked')) {
+                this.setAttribute('checked', '');
+                this.changed();
             }
-            else if (!val && self.hasAttribute('checked')) {
-                self.removeAttribute('checked');
-                self.changed();
+            else if (!val && this.hasAttribute('checked')) {
+                this.removeAttribute('checked');
+                this.changed();
             }
         }
 
         changed(forceCheckedTo?: boolean) {
         }
-    }
+
+        connectedCallback() {
+            super.connectedCallback && super.connectedCallback();
+
+            this.sourceDocument = this.sourceDocument || document;
+            this.containerSpan = this.sourceDocument.createElement('span');
+    
+            this.addEventListener('click', () => {
+                this.checked = this.checked ? false : true;
+            });
+    
+            if (this.hasAttribute('img-src')) {
+                let src = this.getAttribute('img-src').valueOf();
+                if (src) {
+                    this.img = this.sourceDocument.createElement('img');
+                    this.img.src = src;
+                    this.containerSpan.appendChild(this.img);
+                }
+            }
+    
+            this.appendChild(this.containerSpan);
+    
+            if (this.hasAttribute('checked')) {
+                this.checked = true;
+            }
+    
+            this.changed();
+        }
+
+        disconnectedCallback() {
+            super.disconnectedCallback && super.disconnectedCallback();
+        }
+    })
 }

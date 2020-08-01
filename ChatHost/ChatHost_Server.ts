@@ -52,11 +52,11 @@ export module ChatHostServer {
 
         end() {
             fileSystem.writeFileSync('./UserChatData.json', JSON.stringify(this.userData.map((eachData) => {
-                return {
+                return eachData ? {
                     userId: eachData.userId,
                     subscriptions: eachData.subscriptions,
                     chatHistory: eachData.chatHistory
-                };
+                } : null;
             })), 'utf8');
         }
 

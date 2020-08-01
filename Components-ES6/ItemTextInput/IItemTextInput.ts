@@ -1,6 +1,6 @@
 import { IItemsObserver } from "../mixins/IItemsObserver";
 
-export interface IItemTextInput extends IItemsObserver, HTMLElement {
+export interface IItemTextInput extends IItemsObserver {
     sourceDocument: HTMLDocument;
     ownUpdated: boolean;
     placeHolder?: string;

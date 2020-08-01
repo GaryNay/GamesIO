@@ -1,16 +1,23 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { IItemDateInput } from "./IItemDateInput";
 
-export class ItemDateInput extends ItemsObserver.extends(HTMLElement) {
+export class ItemDateInput extends ItemsObserver.extends(HTMLElement) implements IItemDateInput {
+    sourceDocument: HTMLDocument;
+    containerSpan: HTMLSpanElement;
+    input: HTMLInputElement;
+    valueProperty: string;
+    debounce: number;
+    ownUpdated: boolean;
+    placeholder?: string;
+
+    changed: () => void;
 
     get value() {
-        let self: IItemDateInput = <any>this;
-        return self.input.value;
+        return this.input.value;
     }
 
     set value(value: string) {
-        let self: IItemDateInput = <any>this;
-        self.input.valueAsDate = new Date(value);
+        this.input.valueAsDate = new Date(value);
     }
 
     constructor() {
@@ -18,73 +25,69 @@ export class ItemDateInput extends ItemsObserver.extends(HTMLElement) {
     }
 
     connectedCallback() {
-        let self: IItemDateInput = <any>this;
-
-        if (self.hasAttribute('value-property')) {
-            self.valueProperty = self.getAttribute('value-property').valueOf();
-            self.semanticTargetKey = `${self.valueProperty}`;
+        if (this.hasAttribute('value-property')) {
+            this.valueProperty = this.getAttribute('value-property').valueOf();
+            this.semanticTargetKey = `${this.valueProperty}`;
         }
 
-        self.sourceDocument = self.sourceDocument || document;
+        this.sourceDocument = this.sourceDocument || document;
 
-        self.containerSpan = self.sourceDocument.createElement('span');
-        self.appendChild(self.containerSpan);
-        self.input = self.sourceDocument.createElement('input');
-        self.input.type = 'date';
-        self.containerSpan.appendChild(self.input);
+        this.containerSpan = this.sourceDocument.createElement('span');
+        this.appendChild(this.containerSpan);
+        this.input = this.sourceDocument.createElement('input');
+        this.input.type = 'date';
+        this.containerSpan.appendChild(this.input);
 
-        if (self.hasAttribute('value')) {
-            self.input.valueAsDate = new Date(`${self.getAttribute('value').valueOf()}`);
+        if (this.hasAttribute('value')) {
+            this.input.valueAsDate = new Date(`${this.getAttribute('value').valueOf()}`);
         }
         else {
-            self.input.value = '';
+            this.input.value = '';
         }
 
-        if (self.hasAttribute('on-change')) {
-            let onchangeAttribute = self.getAttribute('on-change').valueOf();
+        if (this.hasAttribute('on-change')) {
+            let onchangeAttribute = this.getAttribute('on-change').valueOf();
             if (onchangeAttribute) {
-                let passThisValue = self.hasAttribute('pass-on-change') ? self.getAttribute('pass-on-change').valueOf() : null;
-                self.changed = () => {
-                    let parentTargetReference = ItemsObserver.getParentTargetReference(onchangeAttribute);
+                let passThisValue = this.hasAttribute('pass-on-change') ? this.getAttribute('pass-on-change').valueOf() : null;
+                this.changed = () => {
+                    let parentTargetReference = ItemsObserver.GetParentTargetReference(onchangeAttribute);
                     if (typeof parentTargetReference.target === 'function') {
-                        parentTargetReference.target.apply(parentTargetReference.parent, [passThisValue || self.input.valueAsDate]);
+                        parentTargetReference.target.apply(parentTargetReference.parent, [passThisValue || this.input.valueAsDate]);
                     }
                 };
             }
         }
 
-        self.input.addEventListener('change', () => {
-            let textValue = self.input.value;
-            let ptr = ItemsObserver.getParentTargetReference(self.observedTargetKey);
-            self.ownUpdated = true;
+        this.input.addEventListener('change', () => {
+            let textValue = this.input.value;
+            let ptr = ItemsObserver.GetParentTargetReference(this.observedTargetKey);
+            this.ownUpdated = true;
             ptr.parent[ptr.targetName] = textValue;
 
-            if (self.changed) {
-                self.changed();
+            if (this.changed) {
+                this.changed();
             }
         });
 
-        ItemsObserver.connectedCallback.apply(self);
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
-        let self: IItemDateInput = <any>this;
-        ItemsObserver.disconnectedCallback.apply(self);
+        super.disconnectedCallback();
     }
 
     update(updated: any, key: string, value: any) {
-        let self: IItemDateInput = <any>this;
-        if (!self.ownUpdated) {
+        if (!this.ownUpdated) {
             if (value) {
-                self.input.valueAsDate = new Date(value);
+                this.input.valueAsDate = new Date(value);
             }
             else {
-                self.input.value = null;
+                this.input.value = null;
             }
-            if (self.changed) {
-                self.changed();
+            if (this.changed) {
+                this.changed();
             }
         }
-        self.ownUpdated = false;
+        this.ownUpdated = false;
     }
 }

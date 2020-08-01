@@ -1,72 +1,86 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
-import { ActivationSelector } from "../mixins/ActivationSelector";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
+import { ActivationSelector } from "../mixins/ActivationSelector.js";
 import { IAutoSelector } from "./IAutoSelector";
 
-export class AutoSelector extends ItemsObserver.extends(ActivationSelector.extends(HTMLElement)) {
+export class AutoSelector extends ActivationSelector.extends(ItemsObserver.extends(HTMLElement)) implements IAutoSelector {
+
+    attributeElementId?: string;
+    attributeElement?: HTMLElement;
+    attributeValueProperty: string;
+    attributeValueKey: string;
+    operator: string;
+    value: any;
+    expressionFn: (value: any) => boolean;
 
     constructor() {
         super();
     }
 
     connectedCallback() {
-        let self: IAutoSelector = <any>this;
-        ActivationSelector.connectedCallback.apply(self);
-        if (self.hasAttribute('attribute-element')) {
-            self.attributeElementId = self.getAttribute('attribute-element').valueOf();
+        super.connectedCallback();
+
+        if (this.hasAttribute('attribute-element')) {
+            this.attributeElementId = this.getAttribute('attribute-element').valueOf();
         }
-        if (self.hasAttribute('value')) {
-            self.value = self.getAttribute('value');
-            self.operator = '==';
-            if (self.hasAttribute('operator')) {
-                self.operator = self.getAttribute('operator').valueOf();
+
+        if (this.hasAttribute('value')) {
+            this.value = this.getAttribute('value').valueOf();
+            this.operator = '==';
+            if (this.hasAttribute('operator')) {
+                this.operator = this.getAttribute('operator').valueOf();
             }
-            self.expressionFn = new Function(`return arguments[0] ${self.operator} ${self.value};`) as (evaluationValue: any) => boolean;
+            this.expressionFn = new Function(`return arguments[0] ${this.operator} ${this.value};`) as (evaluationValue: any) => boolean;
         }
         else {
-            self.expressionFn = new Function(`return arguments[0] ? true : false;`) as (evaluationValue: any) => boolean;
+            this.expressionFn = new Function(`return arguments[0] ? true : false;`) as (evaluationValue: any) => boolean;
         }
 
-        if (self.hasAttribute('attribute-value-item')) {
-            self.attributeValueKey = self.getAttribute('attribute-value-item').valueOf();
-            self.attributeValueProperty = ItemsObserver.getKeyProperty(self.attributeValueKey);
+        if (this.hasAttribute('attribute-value-item')) {
+            this.attributeValueKey = this.getAttribute('attribute-value-item').valueOf();
+            this.attributeValueProperty = ItemsObserver.GetKeyProperty(this.attributeValueKey);
         }
 
-        ItemsObserver.connectedCallback.apply(self);
+        if (this.attributeValueKey) {
+            this.addObservedKey(this.attributeValueKey);
+        }
 
-        if (self.attributeValueKey) {
-            self.addObservedKey(self.attributeValueKey);
+        if (this.defaultTargetKey) {
+            let targetPtr = ItemsObserver.GetParentTargetReference(this.defaultTargetKey);
+            if (targetPtr.target) {
+                this.activate();
+            }
+            else {
+                this.deactivate();
+            }
         }
     }
 
     disconnectedCallback() {
-        ActivationSelector.disconnectedCallback.apply(this);
-        ItemsObserver.disconnectedCallback.apply(this);
+        super.disconnectedCallback();
     }
 
     /** unused parent & property supplied by update() from ItemsObserver */
-    update(parent, property, value) {
-        let self: IAutoSelector = <any>this;
-
-        if (self.attributeElementId && !self.activeElement) {
-            self.attributeElement = self.sourceDocument.getElementById(self.attributeElementId);
+    update = (parent: any, property: any, value: any) => {
+        if (this.attributeElementId && !this.activeElement) {
+            this.attributeElement = this.sourceDocument.getElementById(this.attributeElementId);
         }
 
-        if (self.attributeElement) {
-            if (property === self.attributeValueProperty) {
-                self.useAttributeValue = `${value || ''}`;
+        if (this.attributeElement) {
+            if (property === this.attributeValueProperty) {
+                this.useAttributeValue = `${value || ''}`;
             }
             else {
-                self.active = self.expressionFn ? self.expressionFn(value) : self.active;
+                this.active = this.expressionFn ? this.expressionFn(value) : this.active;
             }
-            if (self.active) {
-                self.attributeElement.setAttribute(self.useAttribute, self.useAttributeValue || '');
+            if (this.active) {
+                this.attributeElement.setAttribute(this.useAttribute, this.useAttributeValue || '');
             }
             else {
-                self.attributeElement.removeAttribute(self.useAttribute);
+                this.attributeElement.removeAttribute(this.useAttribute);
             }
         }
         else {
-            self.active = self.expressionFn ? self.expressionFn(value) : self.active;
+            this.active = this.expressionFn ? this.expressionFn(value) : this.active;
         }
     }
 }

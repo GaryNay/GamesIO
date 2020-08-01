@@ -1,5 +1,5 @@
 import { Socket, User } from '../ServerGames/ServerGames';
-import { ClientProviders } from '../ClientProviders/ClientProviders';
+import { ClientProviders } from '../ClientProviders/ClientProviders.js';
 export module LoginProviders {
 
     export class LoginProvider {
@@ -72,7 +72,7 @@ export module LoginProviders {
                     this.behaviors.actionHtmlElement.setAttribute('logged-in', '');
                 }
             }
-            let gameData = (await this.xhrProvider.getAsync<any>(data.gameDataPath)).firstOrDefault();
+            let gameData = data.gameDataPath ? (await this.xhrProvider.getAsync<any>(data.gameDataPath)).firstOrDefault() : {};
             this.loginCallback(data, gameData);
         }
     

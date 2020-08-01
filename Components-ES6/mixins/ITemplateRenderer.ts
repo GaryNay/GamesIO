@@ -1,3 +1,6 @@
+import { TemplateRenderer } from "./TemplateRenderer";
+import { CustomHTMLElement } from "../CustomHTMLElement";
+
 export interface ITemplateRenderer {
     sourceDocument: Document;
     templateCollection: HTMLTemplateElement[];
@@ -6,3 +9,5 @@ export interface ITemplateRenderer {
     removeElementCollection(nodes: Node[], parentElement?: HTMLElement): void;
     renderElementCollection(nodes: Node[], parentElement?: HTMLElement, renderBeforeElement?: Element): void;
 }
+
+export interface TemplateRendererElement extends ITemplateRenderer, CustomHTMLElement {}

@@ -1,4 +1,4 @@
-﻿import { ClientProviders } from '../ClientProviders/ClientProviders';
+﻿import { ClientProviders } from '../ClientProviders/ClientProviders.js';
 import { ClientChatPackage, ServerChatPackage } from './ChatHost_Server';
 
 export module ChatHostClient {

@@ -1,8 +1,9 @@
 import { IItemsObserver } from "../mixins/IItemsObserver";
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
 
-export interface IInlineRepeat extends IItemsObserver, ITemplateRenderer, HTMLElement {
+export interface IInlineRepeat extends IItemsObserver, ITemplateRenderer {
     inLine: boolean;
+    json: boolean;
 
     sourceDocument: HTMLDocument;
     aliasName: string;
@@ -14,11 +15,10 @@ export interface IInlineRepeat extends IItemsObserver, ITemplateRenderer, HTMLEl
     emptyItemElementCollection: Element[];
 
     repeatItems: any[];
-    removeRenderedItem(renderedItemIndex: number);
-    resetRenderedItems();
-    renderItem(renderedItemIndex: number);
-    updateCollection();
-    auditHeader(shouldShow: boolean);
-    auditFooter(shouldShow: boolean);
-    deepCopy<T>(value: T[]): T[];
+    removeRenderedItem(renderedItemIndex: number): void;
+    resetRenderedItems(): void;
+    renderItem(renderedItemIndex: number): void;
+    updateCollection(): void;
+    auditHeader(shouldShow: boolean): void;
+    auditFooter(shouldShow: boolean): void;
 }

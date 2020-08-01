@@ -1,6 +1,6 @@
 import { IWindowScreenSyncer } from "./IWindowScreenSyncer";
 
-export class WindowScreenSyncer extends HTMLElement {
+export class WindowScreenSyncer extends HTMLElement implements IWindowScreenSyncer {
 
     public isMobile: boolean;
     scaleTarget: HTMLElement;
@@ -10,9 +10,7 @@ export class WindowScreenSyncer extends HTMLElement {
     }
 
     connectedCallback() {
-        let self = this as IWindowScreenSyncer;
-
-        self.scaleTarget = self.hasAttribute('scale-target') ? document.getElementById(self.getAttribute('scale-target').valueOf()) : document.body;
+        this.scaleTarget = this.hasAttribute('scale-target') ? document.getElementById(this.getAttribute('scale-target').valueOf()) : document.body;
 
         if (window.navigator.userAgent.match(/Mobile/i)
             || window.navigator.userAgent.match(/iPhone/i)
@@ -22,35 +20,36 @@ export class WindowScreenSyncer extends HTMLElement {
             || window.navigator.userAgent.match(/Android/i)
             || window.navigator.userAgent.match(/BlackBerry/i)
             || window.navigator.userAgent.match(/webOS/i)
-            || self.hasAttribute('force-mobile')
+            || this.hasAttribute('force-mobile')
         ) {
-            self.isMobile = true;
+            this.isMobile = true;
 
-            self.setAttribute('mobile', '');
-            (new Function(`${self.getAttribute('mobile-status').valueOf()} = true;`))();
+            this.setAttribute('mobile', '');
+            this.hasAttribute('mobile-status') && (new Function(`${this.getAttribute('mobile-status').valueOf()} = true;`))();
 
-            if (self.hasAttribute('mobile-width')) {
-                // Force screen width to attribute specified sizes
-                window.resizeTo(parseInt(self.getAttribute('mobile-width').valueOf()), screen.availHeight);
-                return;
-            }
-            if (self.hasAttribute('scale-device')) {
-                let pixelRatio = parseFloat(self.getAttribute('scale-device').valueOf()) || window.devicePixelRatio;
+            if (this.hasAttribute('scale-device')) {
+                window.resizeTo(screen.availWidth, screen.availHeight);
+                let pixelRatio = parseFloat(this.getAttribute('scale-device').valueOf()) || window.devicePixelRatio;
                 let overallIncreasePercentage = (pixelRatio - 1) * 100;
                 let translationPercent = overallIncreasePercentage / 2;
-                self.scaleTarget.style.transform = `translate(${translationPercent}%, ${translationPercent}%) scale(${pixelRatio})`;
+                this.scaleTarget.style.transform = `translate(${translationPercent}%, ${translationPercent}%) scale(${pixelRatio})`;
                 let visiblePercentage = 100 - (overallIncreasePercentage / pixelRatio);
-                self.scaleTarget.style.width = `${visiblePercentage}%`;
+                this.scaleTarget.style.width = `${visiblePercentage}%`;
             }
-            return;
+            if (this.hasAttribute('mobile-width')) {
+                // Force screen width to attribute specified sizes
+                window.resizeTo(parseInt(this.getAttribute('mobile-width').valueOf()), screen.availHeight);
+            }
+        }
+        else {
+            if (this.hasAttribute('mobile-status')) {
+                (new Function(`${this.getAttribute('mobile-status').valueOf()} = false;`))();
+            }
         }
 
         if (window.outerWidth > screen.availWidth) {
             window.resizeTo(screen.availWidth, screen.availHeight);
         }
 
-        if (self.hasAttribute('mobile-status')) {
-            (new Function(`${self.getAttribute('mobile-status').valueOf()} = false;`))();
-        }
     }
 }

@@ -1,4 +1,4 @@
-import { TopDownEngine } from "../TopDown Engine/Engine.js";
+import { TopDownEngine } from "../TopDownEngine/Engine.js";
 
 export module ClientProviders {
     export interface IOutputDiv extends HTMLDivElement {
@@ -382,12 +382,16 @@ export module ClientProviders {
     
         private reject(requestObject: XMLHttpRequest, rejector: (rejectText: string) => void): void {
             if (this.returnResponseOnReject) {
-                return rejector(requestObject.response);
+                return rejector(JSON.stringify({
+                    status: requestObject.status,
+                    statusText: requestObject.statusText,
+                    response: JSON.parse(requestObject.response)
+                }));
             }
             return rejector(`Unexpected result (${requestObject.status}): ${requestObject.statusText}`);
         }
     
-        async postAsync<T>(requestUrl: string, body: T): Promise<any> {
+        async postAsync<T>(requestUrl: string, body: T, stringify = true): Promise<any> {
             return new Promise<string>((resolve, reject) => {
                 let req = new XMLHttpRequest();
                 req.open('POST', encodeURI(requestUrl), true);
@@ -397,13 +401,19 @@ export module ClientProviders {
                     if (req.readyState === 4) {
                         req.onreadystatechange = null;
                         if (req.status >= 200 && req.status <= 204) {
-                            return resolve(req.response ? JSON.parse(req.response) : req);
+                            try {
+                                return resolve(req.response ? JSON.parse(req.response) : req);
+                            }
+                            catch (e)
+                            {
+                                return resolve(req.response ? req.response.toString() : req.toString());
+                            }
                         }
                         return this.reject(req, reject);
                     }
     
                 };
-                req.send(JSON.stringify(body));
+                req.send(stringify ? JSON.stringify(body) : body as any);
             });
         }
         async postForEachAsync<T>(forEachList: T[], requestUrlCallback: (forEachValue: T) => string, forEachCallback?: (eachT: T, guid: string) => any): Promise<any[]> {

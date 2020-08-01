@@ -1,4 +1,7 @@
-export interface IItemSelector {
+import { ItemSelector } from "./ItemSelector";
+import { CustomHTMLElement } from "../CustomHTMLElement";
+
+export interface IItemSelector extends ItemSelector {
 
     checked: boolean;
     sourceDocument: HTMLDocument;
@@ -7,3 +10,5 @@ export interface IItemSelector {
 
     changed(forceCheckedTo?: boolean);
 }
+
+export interface ItemSelectorElement extends IItemSelector, CustomHTMLElement {}

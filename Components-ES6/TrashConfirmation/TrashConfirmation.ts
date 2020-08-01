@@ -1,37 +1,43 @@
-import { ActivationSelector } from "../mixins/ActivationSelector";
-import { ItemsObserver } from "../mixins/ItemsObserver";
-import { TemplateRenderer } from "../mixins/TemplateRenderer";
+import { ActivationSelector } from "../mixins/ActivationSelector.js";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
+import { TemplateRenderer } from "../mixins/TemplateRenderer.js";
 import { ITrashConfirmation } from "./ITrashConfirmation";
 
 /** Observes an array of objects populated by <trash-selector> elements and triggers a callback with trash array as parameter upon confirmation */
-export class TrashConfirmation extends ActivationSelector.extends(ItemsObserver.extends(TemplateRenderer.extends(HTMLElement))) {
+export class TrashConfirmation extends ActivationSelector.extends(ItemsObserver.extends(TemplateRenderer.extends(HTMLElement))) implements ITrashConfirmation {
+    active: boolean;
+
+    displayElements: Element[];
+    modalElements: Element[];
+    inactiveElementId: string;
+    inactiveElement: HTMLElement;
+
+    trashItems: any[];
 
     singularText: string = 'item';
     pluralText: string = 'items';
     confirm = () => { };
 
     get modalActive() {
-        let self: ITrashConfirmation = <any>this;
-        return self.hasAttribute('modal-active');
+        return this.hasAttribute('modal-active');
     }
 
     set modalActive(value) {
-        let self: ITrashConfirmation = <any>this;
-        if (!value && self.hasAttribute('modal-active')) {
-            self.removeAttribute('modal-active');
-            self.removeElementCollection(self.modalElements, self);
+        if (!value && this.hasAttribute('modal-active')) {
+            this.removeAttribute('modal-active');
+            this.removeElementCollection(this.modalElements, this);
             return;
         }
-        if (value && !self.hasAttribute('modal-active')) {
-            self.modalElements = self.importBoundTemplate({
-                ['trash']: `${self.observedTargetKey}`,
-                ['text']: `${self.observedTargetKey}.text`,
-                ['open']: `${self.observedTargetKey}.open()`,
-                ['confirm']: `${self.observedTargetKey}.confirm()`,
-                ['cancel']: `${self.observedTargetKey}.cancel()`
+        if (value && !this.hasAttribute('modal-active')) {
+            this.modalElements = this.importBoundTemplate({
+                ['trash']: `${this.observedTargetKey}`,
+                ['text']: `${this.observedTargetKey}.text`,
+                ['open']: `${this.observedTargetKey}.open()`,
+                ['confirm']: `${this.observedTargetKey}.confirm()`,
+                ['cancel']: `${this.observedTargetKey}.cancel()`
             }, 'trash-confirm') as Element[];
-            self.renderElementCollection(self.modalElements, self);
-            self.setAttribute('modal-active', '');
+            this.renderElementCollection(this.modalElements, this);
+            this.setAttribute('modal-active', '');
         }
     }
 
@@ -41,79 +47,71 @@ export class TrashConfirmation extends ActivationSelector.extends(ItemsObserver.
     }
 
     connectedCallback() {
-        let self: ITrashConfirmation = <any>this;
-        self.collectionAttribute = 'trash';
-        self.sourceDocument = self.sourceDocument || document;
-        if (self.hasAttribute('on-confirm')) {
-            let onconfirmattribute = self.getAttribute('on-confirm').valueOf();
-            let parentTargetReference = ItemsObserver.getParentTargetReference(onconfirmattribute);
+        this.collectionAttribute = 'trash';
+        this.sourceDocument = this.sourceDocument || document;
+        if (this.hasAttribute('on-confirm')) {
+            let onconfirmattribute = this.getAttribute('on-confirm').valueOf();
+            let parentTargetReference = ItemsObserver.GetParentTargetReference(onconfirmattribute);
             if (typeof parentTargetReference.target === 'function') {
-                self.confirm = () => {
-                    parentTargetReference.parent[parentTargetReference.targetName]((<any[]>self.trashItems).map((eachTrashItem) => {
+                this.confirm = () => {
+                    parentTargetReference.parent[parentTargetReference.targetName]((<any[]>this.trashItems).map((eachTrashItem) => {
                         return eachTrashItem.trashItem;
                     }));
                 };
             }
         }
 
-        if (self.hasAttribute('singular-text')) {
-            self.singularText = self.getAttribute('singular-text').valueOf();
+        if (this.hasAttribute('singular-text')) {
+            this.singularText = this.getAttribute('singular-text').valueOf();
         }
 
-        if (self.hasAttribute('plural-text')) {
-            self.pluralText = self.getAttribute('plural-text').valueOf();
+        if (this.hasAttribute('plural-text')) {
+            this.pluralText = this.getAttribute('plural-text').valueOf();
         }
 
-        TemplateRenderer.connectedCallback.apply(self);
-        ItemsObserver.connectedCallback.apply(self);
-        ActivationSelector.connectedCallback.apply(self);
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
-        ActivationSelector.disconnectedCallback.apply(this);
-        ItemsObserver.disconnectedCallback.apply(this);
-        TemplateRenderer.disconnectedCallback.apply(this);
+        super.disconnectedCallback();
     }
 
-    activate() {
-        let self: ITrashConfirmation = <any>this;
-        self.displayElements = self.importBoundTemplate({
-            ['trash']: `${self.observedTargetKey}`,
-            ['text']: `${self.observedTargetKey}.text`,
-            ['open']: `${self.observedTargetKey}.open()`,
-            ['confirm']: `${self.observedTargetKey}.confirm()`,
-            ['cancel']: `${self.observedTargetKey}.cancel()`
+    activate = () => {
+        this.displayElements = this.importBoundTemplate({
+            ['trash']: `${this.observedTargetKey}`,
+            ['text']: `${this.observedTargetKey}.text`,
+            ['open']: `${this.observedTargetKey}.open()`,
+            ['confirm']: `${this.observedTargetKey}.confirm()`,
+            ['cancel']: `${this.observedTargetKey}.cancel()`
         }, 'trash-display') as Element[];
-        self.renderElementCollection(self.displayElements, self);
+        this.renderElementCollection(this.displayElements, this);
     }
 
-    deactivate() {
-        let self: ITrashConfirmation = <any>this;
-        if (self.displayElements && self.displayElements.length) {
-            self.removeElementCollection(self.displayElements, self);
+    deactivate = () => {
+        if (this.displayElements && this.displayElements.length) {
+            this.removeElementCollection(this.displayElements, this);
         }
     }
 
     update(updated: any[], key: string, value: any) {
-        let self: ITrashConfirmation = <any>this;
         if (value && Array.isArray(value)) {
-            self.trashItems = value;
-            let ptr = ItemsObserver.getParentTargetReference(self.observedTargetKey);
+            this.trashItems = value;
+            let ptr = ItemsObserver.GetParentTargetReference(this.observedTargetKey);
 
             let length: number = ptr.target.length;
 
-            ptr.target.text = `${length} ${length === 1 ? self.singularText : self.pluralText}`;
+            ptr.target.text = `${length} ${length === 1 ? this.singularText : this.pluralText}`;
             ptr.target.open = () => {
-                self.modalActive = true;
+                this.modalActive = true;
             };
             ptr.target.confirm = () => {
-                self.confirm();
-                self.modalActive = false;
+                this.confirm();
+                this.modalActive = false;
             };
             ptr.target.cancel = () => {
-                self.modalActive = false;
+                this.modalActive = false;
             };
-            self.active = length > 0;
+            this.active = length > 0;
 
             return;
         }

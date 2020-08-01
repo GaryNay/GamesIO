@@ -1,7 +1,6 @@
 import { ITemplateRenderer } from "../mixins/ITemplateRenderer";
-import { IItemsObserver } from "../mixins/IItemsObserver";
 
-export interface IInlineToaster extends ITemplateRenderer, IItemsObserver, HTMLElement {
+export interface IInlineToaster extends ITemplateRenderer {
 
     active: boolean;
     duration: number;
@@ -9,5 +8,5 @@ export interface IInlineToaster extends ITemplateRenderer, IItemsObserver, HTMLE
     activeToastNumber: number;
 
     parser: (input: any) => string;
-    toast(text: string, templateName?: string, externalCallbackFn?: (confirmed: boolean) => void);
+    toast(text: string, templateName?: string, externalCallbackFn?: (confirmed: boolean) => void): void;
 }

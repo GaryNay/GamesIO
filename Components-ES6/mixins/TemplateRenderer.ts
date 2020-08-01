@@ -1,4 +1,9 @@
-import { ITemplateRenderer } from "./ITemplateRenderer";
+import { ITemplateRenderer, TemplateRendererElement } from "./ITemplateRenderer";
+import { CustomHTMLElement } from "../CustomHTMLElement";
+
+interface Constructor<T> {
+    new (): T;
+}
 
 export class TemplateRenderer {
 
@@ -75,16 +80,7 @@ export class TemplateRenderer {
         }
     }
 
-    static connectedCallback() {
-        let self: ITemplateRenderer & HTMLElement = <any>this;
-        self.sourceDocument = self.sourceDocument || document;
-    }
-
-    static disconnectedCallback() {
-        return;
-    }
-
-    static extends = (superclass) => class extends superclass implements ITemplateRenderer {
+    static extends: <Inherited>(sClass: Constructor<Inherited>) => Constructor<Inherited & TemplateRendererElement> = <any>((superclass: Constructor<CustomHTMLElement>) => class extends superclass implements ITemplateRenderer {
 
         sourceDocument: Document;
         templateCollection: HTMLTemplateElement[];
@@ -123,5 +119,14 @@ export class TemplateRenderer {
         renderElementCollection(nodes, parentElement = this.sourceDocument.body, renderBeforeElement) {
             TemplateRenderer.RenderElementCollection(nodes, parentElement, renderBeforeElement, this.sourceDocument);
         }
-    }
+
+        connectedCallback() {
+            super.connectedCallback && super.connectedCallback();
+            this.sourceDocument = this.sourceDocument || document;
+        }
+        
+        disconnectedCallback() {
+            super.disconnectedCallback && super.disconnectedCallback();
+        }
+    })
 }

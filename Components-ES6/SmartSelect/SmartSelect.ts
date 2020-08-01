@@ -1,31 +1,42 @@
-import { ItemsObserver } from "../mixins/ItemsObserver";
+import { ItemsObserver } from "../mixins/ItemsObserver.js";
 import { ISmartSelect } from "./ISmartSelect";
 
 /** Only behaves as standard select when more than 1 option is available */
-export class SmartSelect extends ItemsObserver.extends(HTMLElement) {
+export class SmartSelect extends ItemsObserver.extends(HTMLElement) implements ISmartSelect {
+    sourceDocument: HTMLDocument;
+    containerSpan: HTMLSpanElement;
+    span: HTMLSpanElement;
+    select: HTMLSelectElement;
+
+    displayProperty: string;
+    valueProperty: string;
+    bindToKey: string;
+    bindToProperty: string;
+    updateBinding: boolean;
+
+    optionItems: any[];
+    selected: () => void;
 
     get value() {
-        let self: ISmartSelect = <any>this;
         let itemIndex = 0;
-        if (self.optionItems.length > 1) {
-            itemIndex = parseInt(self.select.selectedOptions[0].value) || 0;
+        if (this.optionItems.length > 1) {
+            itemIndex = parseInt(this.select.selectedOptions[0].value) || 0;
         }
-        if (self.valueProperty) {
-            return self.optionItems[itemIndex][self.valueProperty];
+        if (this.valueProperty) {
+            return this.optionItems[itemIndex][this.valueProperty];
         }
-        return self.optionItems[itemIndex];
+        return this.optionItems[itemIndex];
     }
 
     get option() {
-        let self: ISmartSelect = <any>this;
         let itemIndex = 0;
-        if (!self.optionItems || !self.optionItems.length) {
+        if (!this.optionItems || !this.optionItems.length) {
             return null;
         }
-        if (self.optionItems.length > 1) {
-            itemIndex = parseInt(self.select.selectedOptions[0].value) || 0;
+        if (this.optionItems.length > 1) {
+            itemIndex = parseInt(this.select.selectedOptions[0].value) || 0;
         }
-        return self.optionItems[itemIndex];
+        return this.optionItems[itemIndex];
     }
 
     constructor() {
@@ -33,211 +44,203 @@ export class SmartSelect extends ItemsObserver.extends(HTMLElement) {
     }
 
     clicked() {
-        let self: ISmartSelect = <any>this;
-        if (self.bindToKey && self.updateBinding) {
-            let ptr = ItemsObserver.getParentTargetReference(self.bindToKey);
-            if (ptr.target && self.bindToProperty) {
-                ptr.target[self.bindToProperty] = self.value;
+        if (this.bindToKey && this.updateBinding) {
+            let ptr = ItemsObserver.GetParentTargetReference(this.bindToKey);
+            if (ptr.target && this.bindToProperty) {
+                ptr.target[this.bindToProperty] = this.value;
             }
             else {
-                ptr.parent[ptr.targetName] = self.value;
+                ptr.parent[ptr.targetName] = this.value;
             }
-            self.updateBinding = false;
+            this.updateBinding = false;
         }
-        if (self.selected) {
-            self.selected();
+        if (this.selected) {
+            this.selected();
         }
     }
 
     connectedCallback() {
-        let self: ISmartSelect = <any>this;
-        self.sourceDocument = self.sourceDocument || document;
-        self.containerSpan = self.sourceDocument.createElement('span');
-        self.appendChild(self.containerSpan);
-        self.select = self.sourceDocument.createElement('select');
-        self.select.setAttribute('disabled', '');
-        self.containerSpan.appendChild(self.select);
-        self.span = self.sourceDocument.createElement('span');
-        self.span.setAttribute('disabled', '');
-        self.containerSpan.appendChild(self.span);
+        this.sourceDocument = this.sourceDocument || document;
+        this.containerSpan = this.sourceDocument.createElement('span');
+        this.appendChild(this.containerSpan);
+        this.select = this.sourceDocument.createElement('select');
+        this.select.setAttribute('disabled', '');
+        this.containerSpan.appendChild(this.select);
+        this.span = this.sourceDocument.createElement('span');
+        this.span.setAttribute('disabled', '');
+        this.containerSpan.appendChild(this.span);
 
-        if (self.hasAttribute('on-select')) {
-            let onselectattribute = self.getAttribute('on-select').valueOf();
+        if (this.hasAttribute('on-select')) {
+            let onselectattribute = this.getAttribute('on-select').valueOf();
             if (onselectattribute) {
-                let passThisValue = self.hasAttribute('pass-on-select') ? self.getAttribute('pass-on-select').valueOf() : null;
-                self.selected = () => {
-                    let parentTargetReference = ItemsObserver.getParentTargetReference(onselectattribute);
+                let passThisValue = this.hasAttribute('pass-on-select') ? this.getAttribute('pass-on-select').valueOf() : null;
+                this.selected = () => {
+                    let parentTargetReference = ItemsObserver.GetParentTargetReference(onselectattribute);
                     if (typeof parentTargetReference.target === 'function') {
-                        if ((<any>self.optionItems).length > 1) {
-                            let selectedIndex = self.select.selectedIndex;
+                        if ((<any>this.optionItems).length > 1) {
+                            let selectedIndex = this.select.selectedIndex;
                             if (selectedIndex >= 0) {
-                                parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || self.optionItems[selectedIndex] ]);
+                                parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || this.optionItems[selectedIndex] ]);
                             }
                         }
                         else {
-                            parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || self.optionItems[0] ]);
+                            parentTargetReference.target.apply(parentTargetReference.parent, [ passThisValue || this.optionItems[0] ]);
                         }
                     }
                 };
             }
         }
 
-        if (!self.hasAttribute('allow-bubbling')) {
-            self.select.addEventListener('click', (e) => {
+        if (!this.hasAttribute('allow-bubbling')) {
+            this.select.addEventListener('click', (e) => {
                 e.stopPropagation();
             });
         }
-        self.select.addEventListener('change', (e) => {
-            self.updateBinding = true;
-            self.clicked();
+        this.select.addEventListener('change', (e) => {
+            this.updateBinding = true;
+            this.clicked();
         });
 
-        if (self.hasAttribute('display-property')) {
-            self.displayProperty = self.getAttribute('display-property').valueOf();
+        if (this.hasAttribute('display-property')) {
+            this.displayProperty = this.getAttribute('display-property').valueOf();
         }
 
-        if (self.hasAttribute('value-property')) {
-            self.valueProperty = self.getAttribute('value-property').valueOf();
+        if (this.hasAttribute('value-property')) {
+            this.valueProperty = this.getAttribute('value-property').valueOf();
         }
 
-        ItemsObserver.connectedCallback.apply(self);
+        super.connectedCallback();
 
-        if (self.hasAttribute('bind-to')) {
-            self.bindToKey = self.getAttribute('bind-to').valueOf();
-            if (self.hasAttribute('bind-to-property')) {
-                self.bindToProperty = self.getAttribute('bind-to-property');
+        if (this.hasAttribute('bind-to')) {
+            this.bindToKey = this.getAttribute('bind-to').valueOf();
+            if (this.hasAttribute('bind-to-property')) {
+                this.bindToProperty = this.getAttribute('bind-to-property');
             }
-            let boundKey = `${self.bindToKey}${self.bindToProperty ? `.${self.bindToProperty}` : ''}`.replace('[', '.').replace(']', '');
-            let boundProperty = self.addObservedKey(boundKey);
-            if (!self.bindToProperty)
-                self.bindToProperty = boundProperty;
+            let boundKey = `${this.bindToKey}${this.bindToProperty ? `.${this.bindToProperty}` : ''}`.replace('[', '.').replace(']', '');
+            let boundProperty = this.addObservedKey(boundKey);
+            if (!this.bindToProperty)
+                this.bindToProperty = boundProperty;
         }
     }
 
     disconnectedCallback() {
-        let self: ISmartSelect = <any>this;
-        ItemsObserver.disconnectedCallback.apply(self);
+        super.disconnectedCallback();
     }
 
     update(updated: any, key: string, value: any) {
-        let self: ISmartSelect = <any>this;
-
-        if (key === self.bindToProperty) {
-            self.updateBinding = false;
-            self.selectOptionByValue(value);
+        if (key === this.bindToProperty) {
+            this.updateBinding = false;
+            this.selectOptionByValue(value);
             return;
         }
 
         if (!value || Array.isArray(value)) {
             // Either removed or written entire items array
-            self.updateOptions();
+            this.updateOptions();
             return;
         }
 
     }
 
     selectOptionByValue(optionValue: any, suppressClick?: boolean) {
-        let self: ISmartSelect = <any>this;
-        if (self.select.options && self.select.options.length) {
-            for (let eachOptionIndex = 0; eachOptionIndex < self.select.options.length; eachOptionIndex++) {
-                if (self.optionItems[self.select.options[eachOptionIndex].value][self.valueProperty] === optionValue) {
-                    return self.selectOption(eachOptionIndex, suppressClick);
+        if (this.select.options && this.select.options.length) {
+            for (let eachOptionIndex = 0; eachOptionIndex < this.select.options.length; eachOptionIndex++) {
+                if (this.optionItems[this.select.options[eachOptionIndex].value][this.valueProperty] === optionValue) {
+                    return this.selectOption(eachOptionIndex, suppressClick);
                 }
             }
             // optionValue does not exist in the valid options
-            self.updateBinding = true;
-            return self.selectOption(0, suppressClick);
+            this.updateBinding = true;
+            return this.selectOption(0, suppressClick);
         }
         else {
-            if (self.optionItems && self.optionItems.length === 1) {
-                if (self.valueProperty) {
-                    if (self.optionItems[0][self.valueProperty] === optionValue) {
-                        return self.selectOption(0, suppressClick);
+            if (this.optionItems && this.optionItems.length === 1) {
+                if (this.valueProperty) {
+                    if (this.optionItems[0][this.valueProperty] === optionValue) {
+                        return this.selectOption(0, suppressClick);
                     }
                 }
                 else {
-                    if (self.optionItems[0] === optionValue) {
-                        return self.selectOption(0, suppressClick);
+                    if (this.optionItems[0] === optionValue) {
+                        return this.selectOption(0, suppressClick);
                     }
                 }
-                self.updateBinding = true;
-                return self.selectOption(0, suppressClick);
+                this.updateBinding = true;
+                return this.selectOption(0, suppressClick);
             }
         }
     }
 
     selectOption(optionIndex, suppressClick?: boolean) {
-        let self: ISmartSelect = <any>this;
-        if (self.optionItems && (<any>self.optionItems).length) {
-            if ((<any>self.optionItems).length > 1) {
-                self.select.options.selectedIndex = optionIndex;
+        if (this.optionItems && (<any>this.optionItems).length) {
+            if ((<any>this.optionItems).length > 1) {
+                this.select.options.selectedIndex = optionIndex;
             }
             if (!suppressClick) {
-                self.clicked();
+                this.clicked();
             }
         }
-        self.updateBinding = false;
+        this.updateBinding = false;
     }
 
     updateOptions() {
-        let self: ISmartSelect = <any>this;
-        self.optionItems = ItemsObserver.getParentTargetReference(self.observedTargetKey).target;
-        if (self.optionItems && (<any>self.optionItems).length) {
-            if ((<any>self.optionItems).length > 1) {
+        this.optionItems = ItemsObserver.GetParentTargetReference(this.observedTargetKey).target;
+        if (this.optionItems && (<any>this.optionItems).length) {
+            if ((<any>this.optionItems).length > 1) {
                 // Disable span and use select with multiple options
-                self.setAttribute('selectable', '');
-                self.span.setAttribute('disabled', '');
-                self.select.removeAttribute('disabled');
-                self.select.innerHTML = '';
-                for (let eachOptionDataIndex = 0; eachOptionDataIndex < self.optionItems.length; eachOptionDataIndex++) {
-                    let eachOptionData = self.optionItems[eachOptionDataIndex];
-                    let option: HTMLOptionElement = self.sourceDocument.createElement('option');
-                    option.text = self.displayProperty ? eachOptionData[self.displayProperty] : eachOptionData.toString();
+                this.setAttribute('selectable', '');
+                this.span.setAttribute('disabled', '');
+                this.select.removeAttribute('disabled');
+                this.select.innerHTML = '';
+                for (let eachOptionDataIndex = 0; eachOptionDataIndex < this.optionItems.length; eachOptionDataIndex++) {
+                    let eachOptionData = this.optionItems[eachOptionDataIndex];
+                    let option: HTMLOptionElement = this.sourceDocument.createElement('option');
+                    option.text = this.displayProperty ? eachOptionData[this.displayProperty] : eachOptionData.toString();
                     option.value = `${eachOptionDataIndex}`;
-                    self.select.appendChild(option);
+                    this.select.appendChild(option);
                 }
             }
             else {
                 // Disable select and use span for one option text
-                self.removeAttribute('selectable');
-                self.select.setAttribute('disabled', '');
-                self.span.removeAttribute('disabled');
-                self.span.innerHTML = self.displayProperty ? self.optionItems[0][self.displayProperty] : self.optionItems[0].toString();
-                self.select.innerHTML = '';
+                this.removeAttribute('selectable');
+                this.select.setAttribute('disabled', '');
+                this.span.removeAttribute('disabled');
+                this.span.innerHTML = this.displayProperty ? this.optionItems[0][this.displayProperty] : this.optionItems[0].toString();
+                this.select.innerHTML = '';
             }
-            if (self.bindToKey) {
-                let ptr = ItemsObserver.getParentTargetReference(self.bindToKey);
+            if (this.bindToKey) {
+                let ptr = ItemsObserver.GetParentTargetReference(this.bindToKey);
                 if (ptr.target) {
-                    if (self.bindToProperty) {
-                        if (ptr.target[self.bindToProperty]) {
-                            self.selectOptionByValue(ptr.target[self.bindToProperty]);
+                    if (this.bindToProperty) {
+                        if (ptr.target[this.bindToProperty]) {
+                            this.selectOptionByValue(ptr.target[this.bindToProperty]);
                         }
                         else {
                             // bound value has not been set, update it
-                            self.updateBinding = true;
-                            self.selectOption(0);
+                            this.updateBinding = true;
+                            this.selectOption(0);
                         }
                     }
                     else {
-                        self.selectOptionByValue(ptr.target);
+                        this.selectOptionByValue(ptr.target);
                     }
                 }
                 else {
-                    if (!self.bindToProperty) {
+                    if (!this.bindToProperty) {
                         // bound value has not been set, update it
-                        self.updateBinding = true;
-                        self.selectOption(0);
+                        this.updateBinding = true;
+                        this.selectOption(0);
                     }
                 }
             }
             else {
-                self.selectOption(0);
+                this.selectOption(0);
             }
         }
         else {
-            self.removeAttribute('selectable');
-            self.span.setAttribute('disabled', '');
-            self.select.setAttribute('disabled', '');
+            this.removeAttribute('selectable');
+            this.span.setAttribute('disabled', '');
+            this.select.setAttribute('disabled', '');
         }
     }
 }

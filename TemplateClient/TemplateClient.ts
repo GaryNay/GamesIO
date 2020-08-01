@@ -1,7 +1,7 @@
-import { TopDownEngine } from '../TopDown Engine/Engine';
-import { ClientProviders } from '../ClientProviders/ClientProviders';
-import { LoginProviders } from '../LoginProvider/LoginProvider';
-import { ChatHostClient } from '../ChatHost/ChatHost_Client';
+import { TopDownEngine } from '../TopDownEngine/Engine.js';
+import { ClientProviders } from '../ClientProviders/ClientProviders.js';
+import { LoginProviders } from '../LoginProvider/LoginProvider.js';
+import { ChatHostClient } from '../ChatHost/ChatHost_Client.js';
 declare function io(options?: { forceNew?: boolean, path?: string, autoConnect?: boolean }): ClientProviders.ClientSocketInterface;
 
 namespace TopDownClient {
@@ -18,7 +18,7 @@ namespace TopDownClient {
     export class ChatClient extends ChatHostClient.ChatHost {}
 }
 
-function entry (canvasX, canvasY) {
+(<any>window).entry = function (canvasX, canvasY) {
 
     var canvas = document.getElementById('outputCanvas') as HTMLCanvasElement;
 

@@ -1,26 +1,22 @@
-import { ItemSelector } from "../mixins/ItemSelector";
-import { ActivationSelector } from "../mixins/ActivationSelector";
+import { ItemSelector } from "../mixins/ItemSelector.js";
+import { ActivationSelector } from "../mixins/ActivationSelector.js";
 import { ICollapseSelector } from "./ICollapseSelector";
 
-export class CollapseSelector extends ItemSelector.extends(ActivationSelector.extends(HTMLElement)) {
+export class CollapseSelector extends ItemSelector.extends(ActivationSelector.extends(HTMLElement)) implements ICollapseSelector {
 
     constructor() {
         super();
     }
 
     connectedCallback() {
-        let self: ICollapseSelector = <any>this;
-        ActivationSelector.connectedCallback.apply(self);
-        ItemSelector.connectedCallback.apply(self);
+        super.connectedCallback();
     }
 
     disconnectedCallback() {
-        ActivationSelector.disconnectedCallback.apply(this);
-        ItemSelector.disconnectedCallback.apply(this);
+        super.disconnectedCallback();
     }
 
     changed(checked = this.hasAttribute('checked')) {
-        let self: ICollapseSelector = <any>this;
-        self.active = checked;
+        this.active = checked;
     }
 }

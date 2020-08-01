@@ -1,9 +1,9 @@
 import { IItemsObserver } from "../mixins/IItemsObserver";
-import { IItemDiv } from "../ItemDiv/IItemDiv";
+import { ItemDiv } from "../ItemDiv/ItemDiv";
 
-export interface IGoalDiv extends IItemsObserver, HTMLElement {
+export interface IGoalDiv extends IItemsObserver {
     updateColor(): any;
-    itemDiv: IItemDiv;
+    itemDiv: ItemDiv;
     markup: string;
     total: number;
     goal: number;

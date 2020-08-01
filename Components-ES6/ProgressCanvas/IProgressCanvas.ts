@@ -1,6 +1,7 @@
 import { IItemsObserver } from "../mixins/IItemsObserver";
+import { ProgressCanvas } from "./ProgressCanvas";
 
-export interface IProgressCanvas extends IItemsObserver, HTMLElement {
+export interface IProgressCanvas extends IItemsObserver {
     sourceDocument: HTMLDocument;
 
     containerSpan: HTMLSpanElement;
@@ -19,8 +20,8 @@ export interface IProgressCanvas extends IItemsObserver, HTMLElement {
 
     complete: boolean;
     completed(): void;
-    oncompleted(callbackFn: (self?: IProgressCanvas) => any): Promise<any>;
-    completedCallback?: (self?: IProgressCanvas) => any;
+    oncompleted(callbackFn: (self?: ProgressCanvas) => any): Promise<any>;
+    completedCallback?: (self?: ProgressCanvas) => any;
     resolveCompleted?: () => void;
 
     clicked?: () => void;
